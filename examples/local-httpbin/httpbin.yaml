@@ -1,0 +1,7 @@
+apiVersion: orchestrate.cloud.sap/v1alpha1
+kind: HttpBin
+metadata:
+  name: httpbin-test
+  namespace: default
+spec:
+  enableHTTPS: false

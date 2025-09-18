@@ -1,0 +1,65 @@
+# Default values for httpbin-operator
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Installation configuration
+operator:
+  install: true
+  resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+  args: []
+  # Name of a secret containing a kubeconfig for a remote cluster.
+  # Use remoteKubeconfigSubPath to specify the path within the secret.
+  #
+  # E.g. if a kubeconfig secret was created with:
+  # kubectl create secret generic remote-kubeconfig --from-file=kubeconfig=/path/to/kubeconfig
+  #
+  # Then set remoteKubeconfig to "remote-kubeconfig" and remoteKubeconfigSubPath to "kubeconfig".
+  remoteKubeconfig: ''
+  remoteKubeconfigSubPath: ''
+
+# Image configuration
+image:
+  registry: ghcr.io
+  repository: platform-mesh/httpbin-operator
+  tag: 0.5.10@sha256:7967f2fe95cbee544fb62043840e9b708b8bcae7cd0b6929226bb665d9e39c52
+  pullPolicy: IfNotPresent
+
+controllerManager:
+  serviceAccountName: httpbin-operator-controller-manager
+  serviceAccount:
+    annotations: {}
+
+rbac:
+  enable: true
+
+podAnnotations: {}
+podLabels: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# [METRICS]: Set to true to generate manifests for exporting metrics.
+# To disable metrics export set false, and ensure that the
+# ControllerManager argument "--metrics-bind-address=:8443" is removed.
+metrics:
+  enable: true
+
+# [PROMETHEUS]: To enable a ServiceMonitor to export metrics to Prometheus set true
+prometheus:
+  enable: false
+
+# [CERT-MANAGER]: To enable cert-manager injection to webhooks set true
+certmanager:
+  enable: false
+
+# [NETWORK POLICIES]: To enable NetworkPolicies set true
+networkPolicy:
+  enable: false

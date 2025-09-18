@@ -1,0 +1,5 @@
+## Append samples of your project ##
+resources:
+- orchestrate_v1alpha1_httpbin.yaml
+- orchestrate_v1alpha1_httpbindeployment.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

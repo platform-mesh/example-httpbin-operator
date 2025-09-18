@@ -1,0 +1,16 @@
+apiVersion: syncagent.kcp.io/v1alpha1
+kind: PublishedResource
+metadata:
+  name: httpbin-local-provider
+spec:
+  filter:
+    resource:
+      matchExpressions:
+        - key: deploymenttype
+          operator: In
+          values:
+          - edge
+  resource:
+    kind: HttpBin
+    apiGroup: orchestrate.cloud.sap
+    version: v1alpha1

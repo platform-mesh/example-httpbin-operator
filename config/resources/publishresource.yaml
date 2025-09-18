@@ -1,0 +1,9 @@
+apiVersion: syncagent.kcp.io/v1alpha1
+kind: PublishedResource
+metadata:
+  name: publish-httpbins # name can be freely chosen
+spec:
+  resource:
+    kind: HttpBin
+    apiGroup: orchestrate.cloud.sap
+    version: v1alpha1

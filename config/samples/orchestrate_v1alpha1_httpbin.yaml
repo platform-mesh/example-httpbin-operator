@@ -1,0 +1,9 @@
+apiVersion: orchestrate.cloud.sap/v1alpha1
+kind: HttpBin
+metadata:
+  labels:
+    app.kubernetes.io/name: httpbin-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: httpbin-sample
+spec:
+  # TODO(user): Add fields here

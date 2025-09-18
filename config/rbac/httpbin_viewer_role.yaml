@@ -1,0 +1,23 @@
+# permissions for end users to view httpbins.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: httpbin-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: httpbin-viewer-role
+rules:
+- apiGroups:
+  - orchestrate.cloud.sap
+  resources:
+  - httpbins
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - orchestrate.cloud.sap
+  resources:
+  - httpbins/status
+  verbs:
+  - get
