@@ -26,44 +26,6 @@
   "automergeStrategy": "squash",
   "platformAutomerge": false,
   "rebaseWhen": "auto",
-  "customManagers": [
-    {
-      "customType": "jsonata",
-      "fileFormat": "yaml",
-      "managerFilePatterns": [
-        "/ocm/component-constructor.yaml/"
-      ],
-      "matchStrings": [
-        "components[*].resources[*].access.{ \"depName\": $split(imageReference, \":\")[0], \"currentValue\": $split(imageReference, \":\")[1] }"
-      ],
-      "datasourceTemplate": "docker",
-      "versioningTemplate": "loose"
-    },
-    {
-      "customType": "jsonata",
-      "fileFormat": "yaml",
-      "managerFilePatterns": [
-        "/ocm/k8s/bootstrap.yaml/"
-      ],
-      "matchStrings": [
-        "$map($filter($, function($elem) { $elem.kind = \"Component\" }), function($elem) { {\"depName\": $[metadata.name=($elem.spec.repositoryRef.name)].spec.repositorySpec.baseUrl & \"/component-descriptors/\" & $elem.spec.component, \"currentValue\": $elem.spec.semver} })"
-      ],
-      "datasourceTemplate": "docker",
-      "versioningTemplate": "loose"
-    },
-    {
-      "customType": "jsonata",
-      "fileFormat": "yaml",
-      "managerFilePatterns": [
-        "/ocm/k8s/kro-rgd.yaml/"
-      ],
-      "matchStrings": [
-        "spec.resources[*].template.spec.values.image.{ \"depName\": registry & \"/\" & repository, \"currentValue\": tag }"
-      ],
-      "datasourceTemplate": "docker",
-      "versioningTemplate": "loose"
-    }
-  ],
   "dependencyDashboard": true,
   "assignAutomerge": false,
   "packageRules": [
