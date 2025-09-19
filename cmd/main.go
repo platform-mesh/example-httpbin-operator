@@ -164,7 +164,7 @@ func main() {
 		WebhookServer:          webhookServer,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "7917b308.orchestrate.cloud.sap",
+		LeaderElectionID:       "7917b308.orchestrate.platform-mesh.io",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to create manager")

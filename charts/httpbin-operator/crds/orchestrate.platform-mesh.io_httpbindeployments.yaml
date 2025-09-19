@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-  name: httpbindeployments.orchestrate.cloud.sap
+  name: httpbindeployments.orchestrate.platform-mesh.io
 spec:
-  group: orchestrate.cloud.sap
+  group: orchestrate.platform-mesh.io
   names:
     kind: HttpBinDeployment
     listKind: HttpBinDeploymentList

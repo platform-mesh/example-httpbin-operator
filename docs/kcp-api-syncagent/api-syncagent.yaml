@@ -23,6 +23,6 @@ spec:
   releaseName: api-syncagent
   interval: 1m
   values:
-    apiExportName: orchestrate.cloud.sap
+    apiExportName: orchestrate.platform-mesh.io
     agentName: local-http-bin
     kcpKubeconfig: syncagent-provider-kubeconfig

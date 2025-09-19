@@ -4,7 +4,7 @@ metadata:
   name: 'api-syncagent:httpbin-local-provider'
 rules:
   - apiGroups:
-      - orchestrate.cloud.sap
+      - orchestrate.platform-mesh.io
     resources:
       - httpbins
     verbs:

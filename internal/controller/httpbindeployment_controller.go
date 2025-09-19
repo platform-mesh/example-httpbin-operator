@@ -31,7 +31,7 @@ import (
 const (
 	httpbinImage  = "nwallus308/httpbin:latest"
 	pollInterval  = 60 * time.Second
-	finalizerName = "httpbindeployment.orchestrate.cloud.sap/finalizer"
+	finalizerName = "httpbindeployment.orchestrate.platform-mesh.io/finalizer"
 
 	// TODO: This is only here to silence golangci-lint. Instead the
 	// selector labels should be in a list and filtered with that.

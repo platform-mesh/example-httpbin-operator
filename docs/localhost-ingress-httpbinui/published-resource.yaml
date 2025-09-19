@@ -12,5 +12,5 @@ spec:
           - edge
   resource:
     kind: HttpBin
-    apiGroup: orchestrate.cloud.sap
+    apiGroup: orchestrate.platform-mesh.io
     version: v1alpha1

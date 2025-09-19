@@ -42,12 +42,12 @@ type HttpBinReconciler struct {
 	RemoteCache  cache.Cache // Add this field
 }
 
-// +kubebuilder:rbac:groups=orchestrate.cloud.sap,resources=httpbins,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=orchestrate.cloud.sap,resources=httpbins/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=orchestrate.cloud.sap,resources=httpbins/finalizers,verbs=update
-// +kubebuilder:rbac:groups=orchestrate.cloud.sap,resources=httpbindeployments,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=orchestrate.cloud.sap,resources=httpbindeployments/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=orchestrate.cloud.sap,resources=httpbindeployments/finalizers,verbs=get;update;patch
+// +kubebuilder:rbac:groups=orchestrate.platform-mesh.io,resources=httpbins,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=orchestrate.platform-mesh.io,resources=httpbins/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=orchestrate.platform-mesh.io,resources=httpbins/finalizers,verbs=update
+// +kubebuilder:rbac:groups=orchestrate.platform-mesh.io,resources=httpbindeployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=orchestrate.platform-mesh.io,resources=httpbindeployments/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=orchestrate.platform-mesh.io,resources=httpbindeployments/finalizers,verbs=get;update;patch
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete

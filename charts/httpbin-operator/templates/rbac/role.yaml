@@ -44,7 +44,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - orchestrate.cloud.sap
+  - orchestrate.platform-mesh.io
   resources:
   - httpbindeployments
   - httpbins
@@ -57,7 +57,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - orchestrate.cloud.sap
+  - orchestrate.platform-mesh.io
   resources:
   - httpbindeployments/finalizers
   - httpbindeployments/status
@@ -67,7 +67,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - orchestrate.cloud.sap
+  - orchestrate.platform-mesh.io
   resources:
   - httpbins/finalizers
   verbs:

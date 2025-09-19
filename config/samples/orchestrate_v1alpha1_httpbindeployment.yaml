@@ -1,4 +1,4 @@
-apiVersion: orchestrate.cloud.sap/v1alpha1
+apiVersion: orchestrate.platform-mesh.io/v1alpha1
 kind: HttpBinDeployment
 metadata:
   labels:

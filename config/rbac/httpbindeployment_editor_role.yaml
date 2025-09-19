@@ -8,7 +8,7 @@ metadata:
   name: httpbindeployment-editor-role
 rules:
 - apiGroups:
-  - orchestrate.cloud.sap
+  - orchestrate.platform-mesh.io
   resources:
   - httpbindeployments
   verbs:
@@ -20,7 +20,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - orchestrate.cloud.sap
+  - orchestrate.platform-mesh.io
   resources:
   - httpbindeployments/status
   verbs:
