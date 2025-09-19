@@ -2,7 +2,7 @@
 apiVersion: delivery.ocm.software/v1alpha1
 kind: Repository
 metadata:
-  name: httpbin-operator-repository
+  name: example-httpbin-operator-repository
 spec:
   repositorySpec:
     # Adjust to your OCM repository
@@ -17,25 +17,25 @@ spec:
 apiVersion: delivery.ocm.software/v1alpha1
 kind: Component
 metadata:
-  name: httpbin-operator-component
+  name: example-httpbin-operator-component
 spec:
-  component: github.com/platform-mesh/httpbin-operator
+  component: github.com/platform-mesh/example-httpbin-operator
   repositoryRef:
-    name: httpbin-operator-repository
+    name: example-httpbin-operator-repository
   semver: 0.5.7
   interval: 10m
   ocmConfig:
     - kind: Repository
       apiVersion: delivery.ocm.software/v1alpha1
-      name: httpbin-operator-repository
+      name: example-httpbin-operator-repository
 ---
 apiVersion: delivery.ocm.software/v1alpha1
 kind: Resource
 metadata:
-  name: httpbin-operator-resource-rgd
+  name: example-httpbin-operator-resource-rgd
 spec:
   componentRef:
-    name: httpbin-operator-component
+    name: example-httpbin-operator-component
   resource:
     byReference:
       resource:
@@ -44,18 +44,18 @@ spec:
   ocmConfig:
     - kind: Repository
       apiVersion: delivery.ocm.software/v1alpha1
-      name: httpbin-operator-repository
+      name: example-httpbin-operator-repository
 ---
 apiVersion: delivery.ocm.software/v1alpha1
 kind: Deployer
 metadata:
-  name: httpbin-operator-deployer
+  name: example-httpbin-operator-deployer
 spec:
   resourceRef:
-    name: httpbin-operator-resource-rgd
+    name: example-httpbin-operator-resource-rgd
     namespace: default
   ocmConfig:
     - kind: Repository
       apiVersion: delivery.ocm.software/v1alpha1
-      name: httpbin-operator-repository
+      name: example-httpbin-operator-repository
       namespace: default

@@ -143,29 +143,29 @@ Apply OCM Bootstrap Manifests:
 
 ```bash
 kubectl k apply -f ocm/k8s/bootstrap.yaml
-# ocmrepository.delivery.ocm.software/httpbin-operator-repository created
-# component.delivery.ocm.software/httpbin-operator-component created
-# resource.delivery.ocm.software/httpbin-operator-resource-rgd created
-# deployer.delivery.ocm.software/httpbin-operator-deployer created
+# ocmrepository.delivery.ocm.software/example-httpbin-operator-repository created
+# component.delivery.ocm.software/example-httpbin-operator-component created
+# resource.delivery.ocm.software/example-httpbin-operator-resource-rgd created
+# deployer.delivery.ocm.software/example-httpbin-operator-deployer created
 ```
 
 Verify resource creation
 ```bash
 kubectl get repositories.delivery.ocm.software,components,resource,deployers.delivery.ocm.software,resourcegraphdefinitions.kro.run -owide
 # NAME                                                              AGE
-# repository.delivery.ocm.software/httpbin-operator-repository   2m
+# repository.delivery.ocm.software/example-httpbin-operator-repository   2m
 
 # NAME                                                         AGE
-# component.delivery.ocm.software/httpbin-operator-component   2m
+# component.delivery.ocm.software/example-httpbin-operator-component   2m
 
 # NAME                                                           AGE
-# resource.delivery.ocm.software/httpbin-operator-resource-rgd   2m
+# resource.delivery.ocm.software/example-httpbin-operator-resource-rgd   2m
 
 # NAME                                                       AGE
-# deployer.delivery.ocm.software/httpbin-operator-deployer   2m
+# deployer.delivery.ocm.software/example-httpbin-operator-deployer   2m
 
 # NAME                                                   APIVERSION   KIND              STATE    TOPOLOGICALORDER                                                                                            AGE
-# resourcegraphdefinition.kro.run/msp-httpbin-operator   v1alpha1     HttpbinOperator   Active   ["resourceChartCrds","ocirepositoryCrds","helmreleaseCrds","resourceChart","ocirepository","helmrelease"]   93s
+# resourcegraphdefinition.kro.run/msp-example-httpbin-operator   v1alpha1     HttpbinOperator   Active   ["resourceChartCrds","ocirepositoryCrds","helmreleaseCrds","resourceChart","ocirepository","helmrelease"]   93s
 ```
 
 8. Wait for KRO to have deployed the `HttpBinOperator` CRDs:
@@ -179,21 +179,21 @@ Apply `kro` manifest to create an `HttpBinOperator` instance:
 
 ```bash
 kubectl apply -f ocm/k8s/kro-instance.yaml
-# httpbinoperator.kro.run/httpbin-operator-simple created
+# httpbinoperator.kro.run/example-httpbin-operator-simple created
 ```
 
 10. Verify deployment status:
 ```bash
 kubectl get httpbinoperators.kro.run,pods -owide
 # NAME                                              STATE    SYNCED   AGE
-# httpbinoperator.kro.run/httpbin-operator-simple   ACTIVE   True     2m9s
+# httpbinoperator.kro.run/example-httpbin-operator-simple   ACTIVE   True     2m9s
 
 # NAME                                   READY   STATUS    RESTARTS   AGE    IP            NODE                 NOMINATED NODE   READINESS GATES
-# pod/httpbin-operator-664744dc5-xm7x5   1/1     Running   0          107s   10.244.0.44   kind-control-plane   <none>           <none>
+# pod/example-httpbin-operator-664744dc5-xm7x5   1/1     Running   0          107s   10.244.0.44   kind-control-plane   <none>           <none>
 ```
 
 11. Fulfilling orders with kcp-api-syncagent
-See [official documentation](https://github.com/platform-mesh/httpbin-operator/tree/main/docs/kcp-api-syncagent).
+See [official documentation](https://github.com/platform-mesh/example-httpbin-operator/tree/main/docs/kcp-api-syncagent).
 
 ## Additional Resources
 - [Open Component Model Official Documentation](http://ocm.software)

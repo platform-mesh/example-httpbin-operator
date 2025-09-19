@@ -4,7 +4,7 @@ kind: ClusterRole
 metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
-  name: httpbin-operator-metrics-auth-role
+  name: example-httpbin-operator-metrics-auth-role
 rules:
 - apiGroups:
   - authentication.k8s.io

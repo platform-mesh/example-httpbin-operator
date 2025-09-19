@@ -4,7 +4,7 @@ A Kubernetes operator that manages HttpBin deployments in a Kubernetes cluster. 
 
 ## Description
 
-The httpbin-operator implements a multi-cluster control mechanism for managing HttpBin deployments:
+The example-httpbin-operator implements a multi-cluster control mechanism for managing HttpBin deployments:
 
 1. The `HttpBin` custom resource (CR) serves as the primary user interface for requesting HttpBin instances in the remote cluster
 2. When an `HttpBin` CR is created, the operator automatically creates a corresponding `HttpBinDeployment` CR in the remote cluster
@@ -155,10 +155,10 @@ make test
 make test-e2e
 
 # Build the operator container image
-make docker-build IMG=<some-registry>/httpbin-operator:tag
+make docker-build IMG=<some-registry>/example-httpbin-operator:tag
 
 # Push the operator container image
-make docker-push IMG=<some-registry>/httpbin-operator:tag
+make docker-push IMG=<some-registry>/example-httpbin-operator:tag
 ```
 
 #### Code Quality and Verification
@@ -179,7 +179,7 @@ make fmt
 make install
 
 # Deploy the operator to the cluster
-make deploy IMG=<some-registry>/httpbin-operator:tag
+make deploy IMG=<some-registry>/example-httpbin-operator:tag
 
 # Uninstall CRDs from the cluster
 make uninstall
@@ -200,7 +200,7 @@ make undeploy
 **Build and push your image to the location specified by `IMG`:**
 
 ```sh
-make docker-build docker-push IMG=<some-registry>/httpbin-operator:tag
+make docker-build docker-push IMG=<some-registry>/example-httpbin-operator:tag
 ```
 
 **NOTE:** This image ought to be published in the personal registry you specified.
@@ -216,7 +216,7 @@ make install
 **Deploy the Manager to the cluster with the image specified by `IMG`:**
 
 ```sh
-make deploy IMG=<some-registry>/httpbin-operator:tag
+make deploy IMG=<some-registry>/example-httpbin-operator:tag
 ```
 
 > **NOTE**: If you encounter RBAC errors, you may need to grant yourself cluster-admin
@@ -280,7 +280,7 @@ Following are the steps to build the installer and distribute this project to us
 1. Build the installer for the image built and published in the registry:
 
 ```sh
-make build-installer IMG=<some-registry>/httpbin-operator:tag
+make build-installer IMG=<some-registry>/example-httpbin-operator:tag
 ```
 
 NOTE: The makefile target mentioned above generates an 'install.yaml'
@@ -293,7 +293,7 @@ its dependencies.
 Users can just run kubectl apply -f <URL for YAML BUNDLE> to install the project, i.e.:
 
 ```sh
-kubectl apply -f https://raw.githubusercontent.com/<org>/httpbin-operator/<tag or branch>/dist/install.yaml
+kubectl apply -f https://raw.githubusercontent.com/<org>/example-httpbin-operator/<tag or branch>/dist/install.yaml
 ```
 
 ## Contributing

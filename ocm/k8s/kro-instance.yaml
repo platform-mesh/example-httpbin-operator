@@ -2,7 +2,7 @@
 apiVersion: kro.run/v1alpha1
 kind: HttpbinOperator
 metadata:
-  name: httpbin-operator-simple
+  name: example-httpbin-operator-simple
 spec:
   prefix: simple
   baseDomain: localhost

@@ -1,9 +1,9 @@
 - creation_date: "2025-06-12 12:43:49.23+00"
   type: rescorings
-  component_name: github.com/platform-mesh/httpbin-operator
+  component_name: github.com/platform-mesh/example-httpbin-operator
   component_version: ""
   artefact_kind: resource
-  artefact_name: image-httpbin-operator
+  artefact_name: image-example-httpbin-operator
   artefact_version: ""
   artefact_type: ociImage
   artefact_extra_id_normalised: ""
@@ -39,10 +39,10 @@
 
 - creation_date: "2025-06-12 12:43:49.23+00"
   type: rescorings
-  component_name: github.com/platform-mesh/httpbin-operator
+  component_name: github.com/platform-mesh/example-httpbin-operator
   component_version: ""
   artefact_kind: resource
-  artefact_name: image-httpbin-operator
+  artefact_name: image-example-httpbin-operator
   artefact_version: ""
   artefact_type: ociImage
   artefact_extra_id_normalised: ""
@@ -78,10 +78,10 @@
 
 - creation_date: "2025-06-12 12:43:49.23+00"
   type: rescorings
-  component_name: github.com/platform-mesh/httpbin-operator
+  component_name: github.com/platform-mesh/example-httpbin-operator
   component_version: ""
   artefact_kind: resource
-  artefact_name: image-httpbin-operator
+  artefact_name: image-example-httpbin-operator
   artefact_version: ""
   artefact_type: ociImage
   artefact_extra_id_normalised: ""
@@ -117,10 +117,10 @@
 
 - creation_date: "2025-06-12 12:43:49.23+00"
   type: rescorings
-  component_name: github.com/platform-mesh/httpbin-operator
+  component_name: github.com/platform-mesh/example-httpbin-operator
   component_version: ""
   artefact_kind: resource
-  artefact_name: image-httpbin-operator
+  artefact_name: image-example-httpbin-operator
   artefact_version: ""
   artefact_type: ociImage
   artefact_extra_id_normalised: ""
@@ -156,10 +156,10 @@
 
 - creation_date: "2025-06-12 12:43:49.23+00"
   type: rescorings
-  component_name: github.com/platform-mesh/httpbin-operator
+  component_name: github.com/platform-mesh/example-httpbin-operator
   component_version: ""
   artefact_kind: resource
-  artefact_name: image-httpbin-operator
+  artefact_name: image-example-httpbin-operator
   artefact_version: ""
   artefact_type: ociImage
   artefact_extra_id_normalised: ""
@@ -195,10 +195,10 @@
 
 - creation_date: "2025-06-12 12:43:49.23+00"
   type: rescorings
-  component_name: github.com/platform-mesh/httpbin-operator
+  component_name: github.com/platform-mesh/example-httpbin-operator
   component_version: ""
   artefact_kind: resource
-  artefact_name: image-httpbin-operator
+  artefact_name: image-example-httpbin-operator
   artefact_version: ""
   artefact_type: ociImage
   artefact_extra_id_normalised: ""
@@ -234,10 +234,10 @@
 
 - creation_date: "2025-06-12 12:43:49.23+00"
   type: rescorings
-  component_name: github.com/platform-mesh/httpbin-operator
+  component_name: github.com/platform-mesh/example-httpbin-operator
   component_version: ""
   artefact_kind: resource
-  artefact_name: image-httpbin-operator
+  artefact_name: image-example-httpbin-operator
   artefact_version: ""
   artefact_type: ociImage
   artefact_extra_id_normalised: ""
@@ -273,10 +273,10 @@
 
 - creation_date: "2025-06-12 12:44:01.655+00"
   type: rescorings
-  component_name: github.com/platform-mesh/httpbin-operator
+  component_name: github.com/platform-mesh/example-httpbin-operator
   component_version: ""
   artefact_kind: resource
-  artefact_name: image-httpbin-operator
+  artefact_name: image-example-httpbin-operator
   artefact_version: ""
   artefact_type: ociImage
   artefact_extra_id_normalised: ""
@@ -312,10 +312,10 @@
 
 - creation_date: "2025-06-12 12:44:01.655+00"
   type: rescorings
-  component_name: github.com/platform-mesh/httpbin-operator
+  component_name: github.com/platform-mesh/example-httpbin-operator
   component_version: ""
   artefact_kind: resource
-  artefact_name: image-httpbin-operator
+  artefact_name: image-example-httpbin-operator
   artefact_version: ""
   artefact_type: ociImage
   artefact_extra_id_normalised: ""
@@ -351,10 +351,10 @@
 
 - creation_date: "2025-06-12 12:44:01.655+00"
   type: rescorings
-  component_name: github.com/platform-mesh/httpbin-operator
+  component_name: github.com/platform-mesh/example-httpbin-operator
   component_version: ""
   artefact_kind: resource
-  artefact_name: image-httpbin-operator
+  artefact_name: image-example-httpbin-operator
   artefact_version: ""
   artefact_type: ociImage
   artefact_extra_id_normalised: ""
@@ -390,10 +390,10 @@
 
 - creation_date: "2025-06-12 12:44:01.655+00"
   type: rescorings
-  component_name: github.com/platform-mesh/httpbin-operator
+  component_name: github.com/platform-mesh/example-httpbin-operator
   component_version: ""
   artefact_kind: resource
-  artefact_name: image-httpbin-operator
+  artefact_name: image-example-httpbin-operator
   artefact_version: ""
   artefact_type: ociImage
   artefact_extra_id_normalised: ""
@@ -429,10 +429,10 @@
 
 - creation_date: "2025-06-12 12:44:21.604+00"
   type: rescorings
-  component_name: github.com/platform-mesh/httpbin-operator
+  component_name: github.com/platform-mesh/example-httpbin-operator
   component_version: ""
   artefact_kind: resource
-  artefact_name: image-httpbin-operator
+  artefact_name: image-example-httpbin-operator
   artefact_version: ""
   artefact_type: ociImage
   artefact_extra_id_normalised: ""
@@ -476,10 +476,10 @@
 
 - creation_date: "2025-06-12 12:44:21.604+00"
   type: rescorings
-  component_name: github.com/platform-mesh/httpbin-operator
+  component_name: github.com/platform-mesh/example-httpbin-operator
   component_version: ""
   artefact_kind: resource
-  artefact_name: image-httpbin-operator
+  artefact_name: image-example-httpbin-operator
   artefact_version: ""
   artefact_type: ociImage
   artefact_extra_id_normalised: ""
@@ -525,10 +525,10 @@
 
 - creation_date: "2025-06-12 12:44:21.604+00"
   type: rescorings
-  component_name: github.com/platform-mesh/httpbin-operator
+  component_name: github.com/platform-mesh/example-httpbin-operator
   component_version: ""
   artefact_kind: resource
-  artefact_name: image-httpbin-operator
+  artefact_name: image-example-httpbin-operator
   artefact_version: ""
   artefact_type: ociImage
   artefact_extra_id_normalised: ""
@@ -574,10 +574,10 @@
 
 - creation_date: "2025-06-12 12:44:21.604+00"
   type: rescorings
-  component_name: github.com/platform-mesh/httpbin-operator
+  component_name: github.com/platform-mesh/example-httpbin-operator
   component_version: ""
   artefact_kind: resource
-  artefact_name: image-httpbin-operator
+  artefact_name: image-example-httpbin-operator
   artefact_version: ""
   artefact_type: ociImage
   artefact_extra_id_normalised: ""
@@ -625,10 +625,10 @@
 
 - creation_date: "2025-06-12 12:44:21.604+00"
   type: rescorings
-  component_name: github.com/platform-mesh/httpbin-operator
+  component_name: github.com/platform-mesh/example-httpbin-operator
   component_version: ""
   artefact_kind: resource
-  artefact_name: image-httpbin-operator
+  artefact_name: image-example-httpbin-operator
   artefact_version: ""
   artefact_type: ociImage
   artefact_extra_id_normalised: ""

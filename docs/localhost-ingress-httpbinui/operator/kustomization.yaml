@@ -5,7 +5,7 @@ patches:
 
   - target:
       kind: Deployment
-      name: httpbin-operator-controller-manager
+      name: example-httpbin-operator-controller-manager
     patch: |-
       - op: add
         path: /spec/template/spec/containers/0/args/-

@@ -58,13 +58,13 @@ manifests: ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefin
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 	@# update CRDs in helm - this is using the intended CRD install of helm: https://helm.sh/docs/chart_best_practices/custom_resource_definitions/
 	@# while helm itself has some problems with updating CRDs commonly used replacements like fluxcd and kustomize have no problem with that
-	rm -f ./charts/httpbin-operator/crds/*
-	cp ./config/crd/bases/*.yaml ./charts/httpbin-operator/crds/
+	rm -f ./charts/example-httpbin-operator/crds/*
+	cp ./config/crd/bases/*.yaml ./charts/example-httpbin-operator/crds/
 	@# update the RBAC -- TODO: replace the entire helm chart with the generated version. makes it much easier.
 	# TODO fails in CI
 	# $(KUBEBUILDER) edit --plugins helm/v1-alpha
-	# rm -rf ./charts/httpbin-operator/templates/rbac
-	# cp -r ./dist/chart/templates/rbac ./charts/httpbin-operator/templates/rbac
+	# rm -rf ./charts/example-httpbin-operator/templates/rbac
+	# cp -r ./dist/chart/templates/rbac ./charts/example-httpbin-operator/templates/rbac
 
 .PHONY: generate
 generate: ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -114,7 +114,7 @@ DOCKER_VERSION=$(patsubst docker-%,%,$(DOCKER_VERSION_RAW))
 print-docker-version: ## Print the Docker version
 	@echo $(DOCKER_VERSION)
 
-IMG ?= $(REGISTRY)/httpbin-operator:$(DOCKER_VERSION)
+IMG ?= $(REGISTRY)/example-httpbin-operator:$(DOCKER_VERSION)
 
 # If you wish to build the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64). However, you must enable docker buildKit for it.
@@ -166,14 +166,14 @@ print-helm-version:
 .PHONY: chart-push
 chart-push:  ## Push Helm chart to GHCR (after pushing multi-arch container image)
 	@echo "Pushing Helm chart to $(REGISTRY)..."
-	helm push dist/httpbin-operator-$(CHART_VERSION).tgz oci://$(REGISTRY)/charts
-	helm push dist/httpbin-operator-crds-$(CHART_VERSION).tgz oci://$(REGISTRY)/charts
+	helm push dist/example-httpbin-operator-$(CHART_VERSION).tgz oci://$(REGISTRY)/charts
+	helm push dist/example-httpbin-operator-crds-$(CHART_VERSION).tgz oci://$(REGISTRY)/charts
 
 .PHONY: charts
 charts: manifests generate ## Generate and package Helm chart with multi-arch image support. Always runs manifests first to ensure CRDs are up to date
-	helm dependency update charts/httpbin-operator
+	helm dependency update charts/example-httpbin-operator
 	mkdir -p dist
-	helm package charts/httpbin-operator -d dist
+	helm package charts/example-httpbin-operator -d dist
 
 ## OCM
 
@@ -188,34 +188,34 @@ print-ocm-version: ## Print the OCM version
 .PHONY: kind-test
 kind-test: kind-test-cleanup docker-build chart ## Create kind cluster, load image, and deploy helm chart
 	@echo "Creating kind cluster..."
-	kind create cluster --name httpbin-operator
-	kind get kubeconfig --name httpbin-operator > msp.kubeconfig.yaml
+	kind create cluster --name example-httpbin-operator
+	kind get kubeconfig --name example-httpbin-operator > msp.kubeconfig.yaml
 	@echo "Loading operator image into kind..."
-	kind load docker-image ${IMG} --name httpbin-operator
+	kind load docker-image ${IMG} --name example-httpbin-operator
 	@echo "Installing helm chart..."
-	helm install httpbin-operator dist/httpbin-operator-$(VERSION).tgz \
+	helm install example-httpbin-operator dist/example-httpbin-operator-$(VERSION).tgz \
 		--create-namespace \
 		--force
 	@echo "Waiting for operator deployment..."
-	kubectl wait --for=condition=available deployment/httpbin-operator --timeout=60s
+	kubectl wait --for=condition=available deployment/example-httpbin-operator --timeout=60s
 	@echo "Deployment status:"
-	kubectl get deployment httpbin-operator
+	kubectl get deployment example-httpbin-operator
 	@echo "CRD status:"
 	kubectl get crds | grep httpbin
 
 .PHONY: kind-test-cleanup
 kind-test-cleanup: ## Delete the kind test cluster
 	@echo "Deleting kind cluster..."
-	@kind delete cluster --name httpbin-operator 2>/dev/null || true
-	@kind delete cluster --name httpbin-operator-crds 2>/dev/null || true
+	@kind delete cluster --name example-httpbin-operator 2>/dev/null || true
+	@kind delete cluster --name example-httpbin-operator-crds 2>/dev/null || true
 
 .PHONY: kind-test-crds
 kind-test-crds: chart ## Create kind cluster and deploy helm chart CRDs only
 	@echo "Creating kind cluster..."
-	kind create cluster --name httpbin-operator-crds
-	kind get kubeconfig --name httpbin-operator-crds > msp-cp.kubeconfig.yaml
+	kind create cluster --name example-httpbin-operator-crds
+	kind get kubeconfig --name example-httpbin-operator-crds > msp-cp.kubeconfig.yaml
 	@echo "Installing helm chart CRDs only..."
-	helm install httpbin-operator dist/httpbin-operator-crds-$(VERSION).tgz
+	helm install example-httpbin-operator dist/example-httpbin-operator-crds-$(VERSION).tgz
 	@echo "CRD status:"
 	kubectl get crds | grep httpbin
 

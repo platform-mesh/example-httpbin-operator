@@ -43,14 +43,14 @@ check_dependencies() {
 # Check if cluster already exists
 check_existing_cluster() {
   sep
-  if kind get clusters | grep -q "^poc-httpbin-operator$"; then
-    log "Warning: Kind cluster 'poc-httpbin-operator' already exists."
+  if kind get clusters | grep -q "^poc-example-httpbin-operator$"; then
+    log "Warning: Kind cluster 'poc-example-httpbin-operator' already exists."
     while true; do
       read -p "Do you want to delete it and continue? (y/n): " choice
       case "$choice" in
       y | Y)
         log "Deleting existing cluster..."
-        kind delete cluster --name poc-httpbin-operator
+        kind delete cluster --name poc-example-httpbin-operator
         return 0
         ;;
       n | N)
@@ -69,8 +69,8 @@ check_existing_cluster() {
 # Create Kind cluster
 create_cluster() {
   sep
-  log "Creating Kind cluster 'poc-httpbin-operator'..."
-  kind create cluster -n poc-httpbin-operator --config - <<EOF
+  log "Creating Kind cluster 'poc-example-httpbin-operator'..."
+  kind create cluster -n poc-example-httpbin-operator --config - <<EOF
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
@@ -82,14 +82,14 @@ nodes:
     hostPort: 443
 EOF
 
-  kubectl cluster-info --context kind-poc-httpbin-operator
+  kubectl cluster-info --context kind-poc-example-httpbin-operator
   log "Kind cluster created successfully."
 }
 
 preload_images() {
   sep
   log "Preloading images into the cluster if present..."
-  ./ocm/imagemgr.sh push poc-httpbin-operator || true
+  ./ocm/imagemgr.sh push poc-example-httpbin-operator || true
 }
 
 configure_coredns() {
@@ -169,9 +169,9 @@ install_kro_run() {
 }
 
 wait_kro_instance() {
-  log "Waiting for httpbin-operator to be ready..."
-  kubectl wait --for jsonpath='{.status.state}'=ACTIVE httpbinoperators.kro.run httpbin-operator-simple
-  kubectl rollout status deployment httpbin-operator
+  log "Waiting for example-httpbin-operator to be ready..."
+  kubectl wait --for jsonpath='{.status.state}'=ACTIVE httpbinoperators.kro.run example-httpbin-operator-simple
+  kubectl rollout status deployment example-httpbin-operator
 }
 
 # Apply kro instance if CRD exists

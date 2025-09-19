@@ -16,15 +16,15 @@ variable "PLATFORMS_LIST" {
 
 group "default" {
   targets = [
-    "httpbin-operator",
+    "example-httpbin-operator",
   ]
 }
 
-target "httpbin-operator" {
+target "example-httpbin-operator" {
   context = "."
   dockerfile = "Dockerfile"
   tags = [
-    "${REGISTRY}/httpbin-operator:${VERSION}",
+    "${REGISTRY}/example-httpbin-operator:${VERSION}",
   ]
   platforms = PLATFORMS_LIST
 }

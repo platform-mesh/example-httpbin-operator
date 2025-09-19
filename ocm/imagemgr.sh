@@ -40,7 +40,7 @@ images=(
     ghcr.io/open-component-model/ocm-k8s-toolkit:latest
     ghcr.io/open-component-model/ocm-k8s-toolkit:latest
 
-    ghcr.io/platform-mesh/httpbin-operator:0.5.10
+    ghcr.io/platform-mesh/example-httpbin-operator:0.5.10
     ghcr.io/platform-mesh/httpbin-ui2:v0.0.5
 
     nwallus308/httpbin:latest

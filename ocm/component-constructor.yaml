@@ -1,24 +1,24 @@
 # yaml-language-server: $schema= https://ocm.software/schemas/configuration-schema.yaml
-# ocm get resources ghcr.io/platform-mesh/ocm//github.com/platform-mesh/httpbin-operator --latest -r -o treewide
+# ocm get resources ghcr.io/platform-mesh/ocm/github.com/platform-mesh/example-httpbin-operator --latest -r -o treewide
 components:
-  - name: github.com/platform-mesh/httpbin-operator
+  - name: github.com/platform-mesh/example-httpbin-operator
     version: "${artifactVersion}"
     provider:
       name: platform-mesh
     resources:
-      - name: oci-helm-chart-httpbin-operator
+      - name: oci-helm-chart-example-httpbin-operator
         type: helmChart
         version: "${artifactVersion}"
         access:
           type: ociArtifact
-          imageReference: ghcr.io/platform-mesh/charts/httpbin-operator:0.5.6
+          imageReference: ghcr.io/platform-mesh/charts/example-httpbin-operator:0.5.6
 
-      - name: image-httpbin-operator
+      - name: image-example-httpbin-operator
         type: ociImage
         version: "${artifactVersion}"
         access:
           type: ociArtifact
-          imageReference: ghcr.io/platform-mesh/httpbin-operator:0.5.10
+          imageReference: ghcr.io/platform-mesh/example-httpbin-operator:0.5.10
 
       - name: kro-rgd
         type: blob

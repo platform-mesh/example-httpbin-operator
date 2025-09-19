@@ -17,9 +17,9 @@ const (
 	// OperatorImage is the image name for the operator
 	OperatorImage = "controller:dev"
 	// OperatorName is the name of the operator
-	OperatorName = "httpbin-operator"
+	OperatorName = "example-httpbin-operator"
 	// OperatorNs is the namespace where the operator is deployed
-	OperatorNs = "httpbin-operator-system"
+	OperatorNs = "example-httpbin-operator-system"
 	// DefaultTimeout is the default timeout for operations
 	DefaultTimeout = time.Second * 300
 	// DefaultInterval is the default polling interval

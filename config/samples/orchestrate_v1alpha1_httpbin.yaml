@@ -2,7 +2,7 @@ apiVersion: orchestrate.platform-mesh.io/v1alpha1
 kind: HttpBin
 metadata:
   labels:
-    app.kubernetes.io/name: httpbin-operator
+    app.kubernetes.io/name: example-httpbin-operator
     app.kubernetes.io/managed-by: kustomize
   name: httpbin-sample
 spec:

@@ -1,4 +1,4 @@
-# Default values for httpbin-operator
+# Default values for example-httpbin-operator
 
 nameOverride: ""
 fullnameOverride: ""
@@ -27,12 +27,12 @@ operator:
 # Image configuration
 image:
   registry: ghcr.io
-  repository: platform-mesh/httpbin-operator
+  repository: platform-mesh/example-httpbin-operator
   tag: 0.5.10@sha256:7967f2fe95cbee544fb62043840e9b708b8bcae7cd0b6929226bb665d9e39c52
   pullPolicy: IfNotPresent
 
 controllerManager:
-  serviceAccountName: httpbin-operator-controller-manager
+  serviceAccountName: example-httpbin-operator-controller-manager
   serviceAccount:
     annotations: {}
 

@@ -3,7 +3,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    app.kubernetes.io/name: httpbin-operator
+    app.kubernetes.io/name: example-httpbin-operator
     app.kubernetes.io/managed-by: kustomize
   name: httpbindeployment-editor-role
 rules:

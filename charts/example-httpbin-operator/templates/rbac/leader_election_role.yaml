@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
-  name: httpbin-operator-leader-election-role
+  name: example-httpbin-operator-leader-election-role
 rules:
 - apiGroups:
   - ""

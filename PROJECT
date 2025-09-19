@@ -7,7 +7,7 @@ layout:
 - go.kubebuilder.io/v4
 plugins:
   helm.kubebuilder.io/v1-alpha: {}
-projectName: httpbin-operator
+projectName: example-httpbin-operator
 repo: http-operator
 resources:
 - api:

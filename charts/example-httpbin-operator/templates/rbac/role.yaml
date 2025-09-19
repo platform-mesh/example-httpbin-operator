@@ -5,7 +5,7 @@ kind: ClusterRole
 metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
-  name: httpbin-operator-manager-role
+  name: example-httpbin-operator-manager-role
 rules:
 - apiGroups:
   - ""

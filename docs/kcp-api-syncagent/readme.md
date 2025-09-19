@@ -1,8 +1,8 @@
-# Fulfilling HttpBin order with httpbin-operator and kcp-api-syncagent
+# Fulfilling HttpBin order with example-httpbin-operator and kcp-api-syncagent
 
 ## Prerequisites
 
-A kind cluster with httpbin-operator configured as noted in
+A kind cluster with example-httpbin-operator configured as noted in
 `ocm/readme.md`.
 
 A kubeconfig with a service account with RBAC to manage resources in the
@@ -36,9 +36,9 @@ resources that can be ordered in the consumer cluster:
     kubectl apply -f docs/kcp-api-syncagent/rbac.yaml
 
 The HttpBin resources is managed by the api-syncagent and triggers the
-httpbin-operator to create the actual HttpBinDeployment.
+example-httpbin-operator to create the actual HttpBinDeployment.
 
-After the httpbin-operator updated the status of the HttpBin resource
+After the example-httpbin-operator updated the status of the HttpBin resource
 api-syncagent synchronizes the status back to the consumer cluster.
 
 ## Create the PublishedResources

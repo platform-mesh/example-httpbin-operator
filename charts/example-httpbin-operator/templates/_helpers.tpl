@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "httpbin-operator.name" -}}
+{{- define "example-httpbin-operator.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "httpbin-operator.fullname" -}}
+{{- define "example-httpbin-operator.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "httpbin-operator.chart" -}}
+{{- define "example-httpbin-operator.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "httpbin-operator.labels" -}}
-helm.sh/chart: {{ include "httpbin-operator.chart" . }}
-{{ include "httpbin-operator.selectorLabels" . }}
+{{- define "example-httpbin-operator.labels" -}}
+helm.sh/chart: {{ include "example-httpbin-operator.chart" . }}
+{{ include "example-httpbin-operator.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,11 +45,11 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "httpbin-operator.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "httpbin-operator.name" . }}
+{{- define "example-httpbin-operator.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "example-httpbin-operator.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{- define "chart.labels" -}}
-{{- include "httpbin-operator.labels" . }}
+{{- include "example-httpbin-operator.labels" . }}
 {{- end }}

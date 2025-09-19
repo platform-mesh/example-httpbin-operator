@@ -1,6 +1,6 @@
 # local-httpbin
 
-This example shows how to run httpbin-operator to deploy HttpBins on in
+This example shows how to run example-httpbin-operator to deploy HttpBins on in
 a single cluster.
 
 ## Prerequisites
@@ -28,7 +28,7 @@ Install the CRDs and operator:
 
 ```bash
 helm --kube-context kind-local-httpbin upgrade --install \
-    httpbin-operator ./charts/httpbin-operator \
+    example-httpbin-operator ./charts/example-httpbin-operator \
     --set image.registry=local \
     --set image.repository=local-httpbin \
     --set image.tag=dev \
@@ -39,7 +39,7 @@ helm --kube-context kind-local-httpbin upgrade --install \
 Wait for the operator to be ready:
 
 ```bash
-kubectl wait --for=condition=Available deploy -l app.kubernetes.io/name=httpbin-operator
+kubectl wait --for=condition=Available deploy -l app.kubernetes.io/name=example-httpbin-operator
 ```
 
 Create a HttpBin resource:

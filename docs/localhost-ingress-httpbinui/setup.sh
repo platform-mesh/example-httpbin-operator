@@ -5,13 +5,13 @@ log() { echo ">>> $@"; }
 
 cd "$(dirname "$0")"
 
-if ! kind get clusters | grep -q httpbin-operator; then
+if ! kind get clusters | grep -q example-httpbin-operator; then
     log Creating kind cluster
-    kind create cluster --name httpbin-operator --config kind-httpbin.yaml
+    kind create cluster --name example-httpbin-operator --config kind-httpbin.yaml
 fi
 
 _kubectl() {
-    kubectl --context kind-httpbin-operator "$@"
+    kubectl --context kind-example-httpbin-operator "$@"
 }
 
 log Deploying ingress
@@ -19,8 +19,8 @@ _kubectl apply -f https://kind.sigs.k8s.io/examples/ingress/deploy-ingress-nginx
 _kubectl apply -f ./ingress-nginx-cm.yaml
 _kubectl -n ingress-nginx rollout status deployment ingress-nginx-controller
 
-log Deploying httpbin-operator
-make -C ../../ docker-install manifests IMG=controller:dev KIND_CLUSTER=httpbin-operator
+log Deploying example-httpbin-operator
+make -C ../../ docker-install manifests IMG=controller:dev KIND_CLUSTER=example-httpbin-operator
 _kubectl apply -k ./operator
 
 log Creating test HttpBin
@@ -43,7 +43,7 @@ fi
 
 helm repo add kcp https://kcp-dev.github.io/helm-charts
 helm repo update
-helm --kube-context kind-httpbin-operator upgrade --install api-syncagent kcp/api-syncagent \
+helm --kube-context kind-example-httpbin-operator upgrade --install api-syncagent kcp/api-syncagent \
     --create-namespace \
     --namespace api-syncagent \
     --version 0.3.0 \
@@ -57,7 +57,7 @@ _kubectl -n api-syncagent apply -f ./published-resource.yaml
 
 log Deploy httpbin-ui
 docker pull ghcr.io/platform-mesh/httpbin-ui2:v0.0.3
-kind load docker-image ghcr.io/platform-mesh/httpbin-ui2:v0.0.3 --name httpbin-operator
+kind load docker-image ghcr.io/platform-mesh/httpbin-ui2:v0.0.3 --name example-httpbin-operator
 _kubectl apply -k ./httpbin-ui
 {
     _kubectl port-forward svc/httpbin-ui 8000:80 >/dev/null &!
