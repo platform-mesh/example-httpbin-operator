@@ -1,0 +1,8 @@
+# k apply -f ocm/k8s/kro-instance.yaml
+apiVersion: kro.run/v1alpha1
+kind: HttpbinOperator
+metadata:
+  name: httpbin-operator-simple
+spec:
+  prefix: simple
+  baseDomain: localhost

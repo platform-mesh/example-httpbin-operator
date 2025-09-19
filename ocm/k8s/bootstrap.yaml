@@ -1,0 +1,61 @@
+# Apply these manifests to bootstrap the OCM repository and components
+apiVersion: delivery.ocm.software/v1alpha1
+kind: Repository
+metadata:
+  name: httpbin-operator-repository
+spec:
+  repositorySpec:
+    # Adjust to your OCM repository
+    baseUrl: ghcr.io/platform-mesh/ocm
+    type: OCIRegistry
+  interval: 10m
+  ocmConfig:
+    - kind: Secret
+      name: github-oci-pull-secret
+      policy: Propagate
+---
+apiVersion: delivery.ocm.software/v1alpha1
+kind: Component
+metadata:
+  name: httpbin-operator-component
+spec:
+  component: github.com/platform-mesh/httpbin-operator
+  repositoryRef:
+    name: httpbin-operator-repository
+  semver: 0.5.7
+  interval: 10m
+  ocmConfig:
+    - kind: Repository
+      apiVersion: delivery.ocm.software/v1alpha1
+      name: httpbin-operator-repository
+---
+apiVersion: delivery.ocm.software/v1alpha1
+kind: Resource
+metadata:
+  name: httpbin-operator-resource-rgd
+spec:
+  componentRef:
+    name: httpbin-operator-component
+  resource:
+    byReference:
+      resource:
+        name: kro-rgd
+  interval: 1m
+  ocmConfig:
+    - kind: Repository
+      apiVersion: delivery.ocm.software/v1alpha1
+      name: httpbin-operator-repository
+---
+apiVersion: delivery.ocm.software/v1alpha1
+kind: Deployer
+metadata:
+  name: httpbin-operator-deployer
+spec:
+  resourceRef:
+    name: httpbin-operator-resource-rgd
+    namespace: default
+  ocmConfig:
+    - kind: Repository
+      apiVersion: delivery.ocm.software/v1alpha1
+      name: httpbin-operator-repository
+      namespace: default
