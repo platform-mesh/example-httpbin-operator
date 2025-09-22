@@ -1,0 +1,6 @@
+# A minimal example of an HttpBin
+apiVersion: orchestrate.platform-mesh.io/v1alpha1
+kind: HttpBin
+metadata:
+  name: example-httpbin
+spec: {}

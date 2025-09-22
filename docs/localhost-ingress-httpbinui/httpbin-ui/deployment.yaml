@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpbin-ui
+  labels:
+    app: httpbin-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpbin-ui
+  template:
+    metadata:
+      labels:
+        app: httpbin-ui
+    spec:
+      imagePullSecrets:
+        - name: github-oci-pull-secret
+      containers:
+      - name: httpbin-ui
+        image: ghcr.io/platform-mesh/httpbin-ui2:v0.0.5
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin-ui
+  labels:
+    app: httpbin-ui
+spec:
+  selector:
+    app: httpbin-ui
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+  type: ClusterIP

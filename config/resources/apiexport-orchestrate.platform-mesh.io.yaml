@@ -1,0 +1,7 @@
+apiVersion: apis.kcp.io/v1alpha1
+kind: APIExport
+metadata:
+  creationTimestamp: null
+  name: orchestrate.platform-mesh.io
+spec: {}
+status: {}
