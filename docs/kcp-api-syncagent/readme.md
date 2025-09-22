@@ -2,8 +2,7 @@
 
 ## Prerequisites
 
-A kind cluster with example-httpbin-operator configured as noted in
-`ocm/readme.md`.
+A kind cluster with example-httpbin-operator configured.
 
 A kubeconfig with a service account with RBAC to manage resources in the
 consumer cluster as documented here:
