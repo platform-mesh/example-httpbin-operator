@@ -32,7 +32,7 @@ import (
 
 var _ = Describe("HttpBin Controller", func() {
 	Context("When reconciling a resource", func() {
-		const resourceName = "test-resources"
+		const resourceName = "test-resource"
 
 		ctx := context.Background()
 
