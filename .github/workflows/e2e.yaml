@@ -17,6 +17,7 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
+    environment: e2e-approval
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
