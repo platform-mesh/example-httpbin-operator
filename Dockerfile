@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.24 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.24@sha256:87916acb3242b6259a26deaa7953bdc6a3a6762a28d340e4f1448e7b5c27c009 AS builder
 
 WORKDIR /workspace
 
@@ -17,7 +17,7 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
 
 # Use distroless base-debian11 image to include shell access while keeping minimal footprint
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM gcr.io/distroless/base-debian11:debug
+FROM gcr.io/distroless/base-debian11:debug@sha256:68e5ea65df0f5d135083d4cc1df5fc16855d61ed628254df8e1affa8ce2d3244
 WORKDIR /
 COPY --from=builder /workspace/bin/manager .
 USER 65532:65532
