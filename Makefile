@@ -193,7 +193,7 @@ kind-test: kind-test-cleanup docker-build charts ## Create kind cluster, load im
 	@echo "Loading operator image into kind..."
 	kind load docker-image ${IMG} --name example-httpbin-operator
 	@echo "Installing helm chart..."
-	helm install example-httpbin-operator dist/example-httpbin-operator-$(VERSION).tgz \
+	helm install example-httpbin-operator dist/example-httpbin-operator-0.0.0.tgz \
 		--create-namespace \
 		--force
 	@echo "Waiting for operator deployment..."
@@ -215,7 +215,7 @@ kind-test-crds: charts ## Create kind cluster and deploy helm chart CRDs only
 	kind create cluster --name example-httpbin-operator-crds
 	kind get kubeconfig --name example-httpbin-operator-crds > msp-cp.kubeconfig.yaml
 	@echo "Installing helm chart CRDs only..."
-	helm install example-httpbin-operator dist/example-httpbin-operator-crds-$(VERSION).tgz
+	helm install example-httpbin-operator dist/example-httpbin-operator-crds-0.0.0.tgz
 	@echo "CRD status:"
 	kubectl get crds | grep httpbin
 
