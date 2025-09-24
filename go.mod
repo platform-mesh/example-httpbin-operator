@@ -2,7 +2,7 @@ module http-operator
 
 go 1.24.5
 
-toolchain go1.24.7
+toolchain go1.25.1
 
 tool (
 	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
