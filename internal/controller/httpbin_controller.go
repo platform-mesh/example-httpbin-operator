@@ -25,6 +25,7 @@ import (
 	orchestratev1alpha1 "http-operator/api/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -145,6 +146,16 @@ func (r *HttpBinReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 				"error_forbidden", errors.IsForbidden(err),
 				"error_invalid", errors.IsInvalid(err),
 				"error_already_exists", errors.IsAlreadyExists(err))
+
+			meta.SetStatusCondition(&httpBin.Status.Conditions, metav1.Condition{
+				Type:               orchestratev1alpha1.HttpBinConditionReady,
+				Status:             metav1.ConditionFalse,
+				Reason:             orchestratev1alpha1.HttpBinReasonDeploymentCreateFailed,
+				Message:            "Failed to create HttpBinDeployment: " + err.Error(),
+				ObservedGeneration: httpBin.GetGeneration(),
+			})
+			// Optionally update status immediately
+			_ = r.RemoteClient.Status().Update(ctx, httpBin)
 			return ctrl.Result{}, err
 		}
 
@@ -181,20 +192,37 @@ func (r *HttpBinReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	// Sync ready status from HttpBinDeployment
 	if httpBin.Status.Ready != found.Status.IsDeploymentReady {
 		httpBin.Status.Ready = found.Status.IsDeploymentReady
 		statusNeedsUpdate = true
+	}
+
+	if httpBin.Status.Ready {
+		meta.SetStatusCondition(&httpBin.Status.Conditions, metav1.Condition{
+			Type:               orchestratev1alpha1.HttpBinConditionReady,
+			Status:             metav1.ConditionTrue,
+			Reason:             orchestratev1alpha1.HttpBinReasonDeploymentReady,
+			Message:            "HttpBin is deployed and URL is available",
+			ObservedGeneration: httpBin.GetGeneration(),
+		})
+	} else {
+		meta.SetStatusCondition(&httpBin.Status.Conditions, metav1.Condition{
+			Type:               orchestratev1alpha1.HttpBinConditionReady,
+			Status:             metav1.ConditionFalse,
+			Reason:             orchestratev1alpha1.HttpBinReasonDeploymentNotReady,
+			Message:            "Deployment exists but is not yet available",
+			ObservedGeneration: httpBin.GetGeneration(),
+		})
 	}
 
 	// Update status if needed
 	if statusNeedsUpdate {
 		logger.Info("Updating HttpBin status",
 			"URL", httpBin.Status.URL,
-			"Ready", httpBin.Status.Ready)
+			"Ready", httpBin.Status.Ready,
+			"Conditions", httpBin.Status.Conditions)
 
-		err = r.RemoteClient.Status().Update(ctx, httpBin)
-		if err != nil {
+		if err := r.RemoteClient.Status().Update(ctx, httpBin); err != nil {
 			logger.Error(err, "Failed to update HttpBin status")
 			return ctrl.Result{}, err
 		}

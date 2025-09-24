@@ -20,6 +20,22 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	HttpBinDeploymentConditionReady             = "Ready"
+	HttpBinDeploymentConditionDeploymentHealthy = "DeploymentHealthy"
+	HttpBinDeploymentConditionServiceHealthy    = "ServiceHealthy"
+	HttpBinDeploymentConditionIngressHealthy    = "IngressHealthy"
+)
+
+const (
+	HttpBinDeploymentReasonDeploymentCreated = "DeploymentCreated"
+	HttpBinDeploymentReasonDeploymentFailed  = "DeploymentFailed"
+	HttpBinDeploymentReasonServiceCreated    = "ServiceCreated"
+	HttpBinDeploymentReasonServiceFailed     = "ServiceFailed"
+	HttpBinDeploymentReasonIngressCreated    = "IngressCreated"
+	HttpBinDeploymentReasonIngressFailed     = "IngressFailed"
+)
+
 // ServiceConfig defines the configuration for the HttpBin service
 type ServiceConfig struct {
 	// Name is the name of the service. If not provided, the HttpBinDeployment name will be used.
