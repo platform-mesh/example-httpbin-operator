@@ -1,8 +1,6 @@
 module http-operator
 
-go 1.24.5
-
-toolchain go1.25.1
+go 1.25.1
 
 tool (
 	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
@@ -326,7 +324,7 @@ require (
 	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20250918083545-961fc2c233d6 // indirect
 	sigs.k8s.io/controller-tools v0.19.0 // indirect
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
-	sigs.k8s.io/kubebuilder/v4 v4.9.0 // indirect
+	sigs.k8s.io/kubebuilder/v3 v3.15.1 // indirect
 	sigs.k8s.io/kustomize/api v0.20.1 // indirect
 	sigs.k8s.io/kustomize/cmd/config v0.20.1 // indirect
 	sigs.k8s.io/kustomize/kustomize/v5 v5.7.1 // indirect

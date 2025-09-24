@@ -46,8 +46,8 @@ helm repo update
 helm --kube-context kind-example-httpbin-operator upgrade --install api-syncagent kcp/api-syncagent \
     --create-namespace \
     --namespace api-syncagent \
-    --version 0.3.0 \
-    --set image.tag=v0.3.0 \
+    --version 0.4.0 \
+    --set image.tag=v0.4.0 \
     --set apiExportName=demo.platform-mesh.io \
     --set agentName=kcp-api-syncagent \
     --set kcpKubeconfig=provider-kubeconfig
