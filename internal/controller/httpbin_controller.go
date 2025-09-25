@@ -142,7 +142,7 @@ func (r *HttpBinReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 				"error_invalid", errors.IsInvalid(err),
 				"error_already_exists", errors.IsAlreadyExists(err))
 
-			setHttpBinConditionStatusCondition(httpBin, metav1.ConditionFalse, orchestratev1alpha1.HttpBinReasonDeploymentFailed, "Failed to create HttpBinDeployment: "+err.Error())
+			setHttpBinConditionStatusCondition(httpBin, metav1.ConditionFalse, orchestratev1alpha1.HttpBinConditionReasonDeploymentFailed, "Failed to create HttpBinDeployment: "+err.Error())
 			_ = r.RemoteClient.Status().Update(ctx, httpBin)
 			return ctrl.Result{}, err
 		}
@@ -174,9 +174,9 @@ func (r *HttpBinReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	httpBin.Status.Ready = found.Status.IsDeploymentReady
 
 	if found.Status.IsDeploymentReady {
-		setHttpBinConditionStatusCondition(httpBin, metav1.ConditionTrue, orchestratev1alpha1.HttpBinReasonDeploymentReady, "HttpBin is deployed and URL is available")
+		setHttpBinConditionStatusCondition(httpBin, metav1.ConditionTrue, orchestratev1alpha1.HttpBinConditionReasonDeploymentReady, "HttpBin is deployed and URL is available")
 	} else {
-		setHttpBinConditionStatusCondition(httpBin, metav1.ConditionFalse, orchestratev1alpha1.HttpBinReasonDeploymentNotReady, "Deployment exists but is not yet available")
+		setHttpBinConditionStatusCondition(httpBin, metav1.ConditionFalse, orchestratev1alpha1.HttpBinConditionReasonDeploymentProgressing, "Deployment exists but is not yet available")
 	}
 
 	logger.Info("Updating HttpBin status",

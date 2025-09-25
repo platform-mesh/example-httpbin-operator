@@ -20,20 +20,24 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// HttpBinConditionType represents a condition type for HttpBin
+type HttpBinConditionType string
+
+// HttpBinConditionReason represents a reason for a condition's last transition
+type HttpBinConditionReason string
+
 const (
 	// HttpBinConditionTypeReady represents whether the HttpBin resource is fully available.
 	HttpBinConditionTypeReady = "Ready"
-)
 
-const (
-	// HttpBinReasonDeploymentReady means the Deployment is available and serving.
-	HttpBinReasonDeploymentReady = "DeploymentReady"
+	// HttpBinConditionReasonDeploymentReady means the Deployment is available and serving.
+	HttpBinConditionReasonDeploymentReady = "DeploymentReady"
 
-	// HttpBinReasonDeploymentNotReady means the Deployment exists but is not yet available.
-	HttpBinReasonDeploymentNotReady = "DeploymentNotReady"
+	// HttpBinConditionReasonDeploymentProgressing means the Deployment exists but is not yet available.
+	HttpBinConditionReasonDeploymentProgressing = "DeploymentProgressing"
 
-	// HttpBinReasonDeploymentFailed means the Deployment could not be created.
-	HttpBinReasonDeploymentFailed = "DeploymentFailed"
+	// HttpBinConditionReasonDeploymentFailed means the Deployment could not be created.
+	HttpBinConditionReasonDeploymentFailed = "DeploymentFailed"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
