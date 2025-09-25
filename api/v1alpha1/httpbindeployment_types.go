@@ -21,19 +21,28 @@ import (
 )
 
 const (
-	HttpBinDeploymentConditionReady             = "Ready"
-	HttpBinDeploymentConditionDeploymentHealthy = "DeploymentHealthy"
-	HttpBinDeploymentConditionServiceHealthy    = "ServiceHealthy"
-	HttpBinDeploymentConditionIngressHealthy    = "IngressHealthy"
+	// HttpBinDeploymentConditionReady indicates that the HttpBin deployment is ready
+	HttpBinDeploymentConditionTypeReady = "Ready"
+	// HttpBinDeploymentConditionTypeServiceCreated indicates that the Service has been created
+	HttpBinDeploymentConditionTypeServiceCreated = "ServiceCreated"
+	// HttpBinDeploymentConditionTypeIngressCreated indicates that the Ingress has been created
+	HttpBinDeploymentConditionTypeIngressCreated = "IngressCreated"
+	// HttpBinDeploymentConditionTypeDeploymentCreated indicates that the Deployment has been created
+	HttpBinDeploymentConditionTypeDeploymentCreated = "DeploymentCreated"
+	// HttpBinDeploymentConditionTypeURLReady indicates that the URL is ready
+	HttpBinDeploymentConditionTypeURLReady = "URLReady"
 )
 
 const (
-	HttpBinDeploymentReasonDeploymentCreated = "DeploymentCreated"
-	HttpBinDeploymentReasonDeploymentFailed  = "DeploymentFailed"
-	HttpBinDeploymentReasonServiceCreated    = "ServiceCreated"
-	HttpBinDeploymentReasonServiceFailed     = "ServiceFailed"
-	HttpBinDeploymentReasonIngressCreated    = "IngressCreated"
-	HttpBinDeploymentReasonIngressFailed     = "IngressFailed"
+
+	// HttpBinDeploymentReasonDeploymentFailed means the Deployment failed to be created.
+	HttpBinDeploymentReasonDeploymentFailed = "DeploymentFailed"
+
+	// HttpBinDeploymentReasonServiceFailed means the Service failed to be created.
+	HttpBinDeploymentReasonServiceFailed = "ServiceFailed"
+
+	// HttpBinDeploymentReasonIngressFailed means the Ingress failed to be created.
+	HttpBinDeploymentReasonIngressFailed = "IngressFailed"
 )
 
 // ServiceConfig defines the configuration for the HttpBin service

@@ -21,22 +21,19 @@ import (
 )
 
 const (
-	// HttpBinConditionReady represents whether the HttpBin resource is fully available.
-	HttpBinConditionReady = "Ready"
+	// HttpBinConditionTypeReady represents whether the HttpBin resource is fully available.
+	HttpBinConditionTypeReady = "Ready"
 )
 
 const (
-	// DeploymentCreated means the Deployment was successfully created.
-	HttpBinReasonDeploymentCreated = "DeploymentCreated"
-
-	// DeploymentReady means the Deployment is available and serving.
+	// HttpBinReasonDeploymentReady means the Deployment is available and serving.
 	HttpBinReasonDeploymentReady = "DeploymentReady"
 
-	// DeploymentNotReady means the Deployment exists but is not yet available.
+	// HttpBinReasonDeploymentNotReady means the Deployment exists but is not yet available.
 	HttpBinReasonDeploymentNotReady = "DeploymentNotReady"
 
-	// DeploymentCreateFailed means the Deployment could not be created.
-	HttpBinReasonDeploymentCreateFailed = "DeploymentCreateFailed"
+	// HttpBinReasonDeploymentFailed means the Deployment could not be created.
+	HttpBinReasonDeploymentFailed = "DeploymentFailed"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
