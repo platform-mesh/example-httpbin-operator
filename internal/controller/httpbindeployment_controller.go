@@ -17,6 +17,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -147,6 +148,8 @@ func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		err = r.LocalClient.Create(ctx, dep)
 		if err != nil {
 			logger.Error(err, "Failed to create new Deployment")
+			setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionFalse, orchestratev1alpha1.HttpBinDeploymentConditionTypeHttpBinInstanceCreated, orchestratev1alpha1.HttpBinDeploymentConditionReasonHttpBinInstanceFailed, "Failed to create Deployment: "+err.Error())
+			_ = r.RemoteClient.Status().Update(ctx, httpBinDeployment)
 			return ctrl.Result{}, err
 		}
 	} else if err != nil {
@@ -160,6 +163,8 @@ func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		err = r.LocalClient.Update(ctx, newDep)
 		if err != nil {
 			logger.Error(err, "Failed to update Deployment")
+			setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionFalse, orchestratev1alpha1.HttpBinDeploymentConditionTypeHttpBinInstanceCreated, orchestratev1alpha1.HttpBinConditionReasonDeploymentFailed, "Failed to update Deployment: "+err.Error())
+			_ = r.RemoteClient.Status().Update(ctx, httpBinDeployment)
 			return ctrl.Result{}, err
 		}
 	}
@@ -179,6 +184,8 @@ func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		err = r.LocalClient.Create(ctx, svc)
 		if err != nil {
 			logger.Error(err, "Failed to create new Service")
+			setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionFalse, orchestratev1alpha1.HttpBinDeploymentConditionTypeServiceExposed, orchestratev1alpha1.HttpBinDeploymentConditionReasonHttpBinServiceExposureFailed, "Failed to create Service: "+err.Error())
+			_ = r.RemoteClient.Status().Update(ctx, httpBinDeployment)
 			return ctrl.Result{}, err
 		}
 	} else if err != nil {
@@ -193,6 +200,8 @@ func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		err = r.LocalClient.Update(ctx, newSvc)
 		if err != nil {
 			logger.Error(err, "Failed to update Service")
+			setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionFalse, orchestratev1alpha1.HttpBinDeploymentConditionTypeServiceExposed, orchestratev1alpha1.HttpBinDeploymentConditionReasonHttpBinServiceExposureFailed, "Failed to update Service: "+err.Error())
+			_ = r.RemoteClient.Status().Update(ctx, httpBinDeployment)
 			return ctrl.Result{}, err
 		}
 	}
@@ -211,6 +220,8 @@ func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			err = r.LocalClient.Create(ctx, desiredIngress)
 			if err != nil {
 				logger.Error(err, "Failed to create new Ingress")
+				setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionFalse, orchestratev1alpha1.HttpBinDeploymentConditionTypeServiceExposed, orchestratev1alpha1.HttpBinDeploymentConditionReasonHttpBinServiceExposureFailed, "Failed to create Ingress: "+err.Error())
+				_ = r.RemoteClient.Status().Update(ctx, httpBinDeployment)
 				return ctrl.Result{}, err
 			}
 		} else if err != nil {
@@ -219,6 +230,8 @@ func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		} else {
 			if err := r.LocalClient.Update(ctx, desiredIngress); err != nil {
 				logger.Error(err, "Failed to update Ingress")
+				setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionFalse, orchestratev1alpha1.HttpBinDeploymentConditionTypeServiceExposed, orchestratev1alpha1.HttpBinDeploymentConditionReasonHttpBinServiceExposureFailed, "Failed to update Ingress: "+err.Error())
+				_ = r.RemoteClient.Status().Update(ctx, httpBinDeployment)
 				return ctrl.Result{}, err
 			}
 		}
@@ -243,21 +256,17 @@ func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 				err = r.LocalClient.Update(ctx, ingress)
 				if err != nil {
 					logger.Error(err, "Failed to update Ingress")
+					setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionFalse, orchestratev1alpha1.HttpBinDeploymentConditionTypeServiceExposed, orchestratev1alpha1.HttpBinDeploymentConditionReasonHttpBinServiceExposureFailed, "Failed to update Ingress: "+err.Error())
+					_ = r.RemoteClient.Status().Update(ctx, httpBinDeployment)
 					return ctrl.Result{}, err
 				}
 			}
+			setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionTrue, orchestratev1alpha1.HttpBinDeploymentConditionTypeServiceExposed, orchestratev1alpha1.HttpBinDeploymentConditionReasonReady, "HttpBin service is exposed")
 		}
 	}
 
 	// Update status in remote cluster
 	statusNeedsUpdate := false
-
-	// Update ReadyReplicas and IsDeploymentReady
-	if httpBinDeployment.Status.ReadyReplicas != deployment.Status.ReadyReplicas {
-		httpBinDeployment.Status.ReadyReplicas = deployment.Status.ReadyReplicas
-		httpBinDeployment.Status.IsDeploymentReady = deployment.Status.ReadyReplicas > 0
-		statusNeedsUpdate = true
-	}
 
 	url := url.URL{}
 
@@ -290,7 +299,20 @@ func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	urlS := url.String()
 	if httpBinDeployment.Status.URL != urlS {
 		httpBinDeployment.Status.URL = urlS
+		setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionTrue, orchestratev1alpha1.HttpBinDeploymentConditionTypeEndpointReady, orchestratev1alpha1.HttpBinDeploymentConditionReasonReady, "HttpBin endpoint is ready to serve")
 		statusNeedsUpdate = true
+	}
+
+	// Update ReadyReplicas and IsDeploymentReady
+	if httpBinDeployment.Status.ReadyReplicas != deployment.Status.ReadyReplicas {
+		httpBinDeployment.Status.ReadyReplicas = deployment.Status.ReadyReplicas
+		httpBinDeployment.Status.IsDeploymentReady = deployment.Status.ReadyReplicas > 0
+		statusNeedsUpdate = true
+		if httpBinDeployment.Status.IsDeploymentReady {
+			setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionTrue, orchestratev1alpha1.HttpBinDeploymentConditionTypeReady, orchestratev1alpha1.HttpBinDeploymentConditionReasonReady, "HttpBinDeployment instance is ready")
+		} else {
+			setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionFalse, orchestratev1alpha1.HttpBinDeploymentConditionTypeReady, orchestratev1alpha1.HttpBinDeploymentConditionReasonHttpBinInstanceProgressing, "HttpBinDeployment instance is not yet available")
+		}
 	}
 
 	// Update status if any changes were made
@@ -298,7 +320,8 @@ func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		logger.Info("Updating HttpBinDeployment status",
 			"URL", httpBinDeployment.Status.URL,
 			"ReadyReplicas", httpBinDeployment.Status.ReadyReplicas,
-			"IsDeploymentReady", httpBinDeployment.Status.IsDeploymentReady)
+			"IsDeploymentReady", httpBinDeployment.Status.IsDeploymentReady,
+			"Conditions", httpBinDeployment.Status.Conditions)
 
 		err = r.RemoteClient.Status().Update(ctx, httpBinDeployment)
 		if err != nil {
@@ -685,6 +708,16 @@ func (r *HttpBinDeploymentReconciler) ingressForHttpBin(m *orchestratev1alpha1.H
 	}
 
 	return ingress
+}
+
+func setHttpBinDeploymentStatusCondition(m *orchestratev1alpha1.HttpBinDeployment, status metav1.ConditionStatus, conditionType, reason, message string) {
+	meta.SetStatusCondition(&m.Status.Conditions, metav1.Condition{
+		Type:               conditionType,
+		Status:             status,
+		Reason:             reason,
+		Message:            message,
+		ObservedGeneration: m.GetGeneration(),
+	})
 }
 
 // SetupWithManager sets up the controller with the Manager.

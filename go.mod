@@ -7,7 +7,7 @@ tool (
 	github.com/kcp-dev/kcp/sdk/cmd/apigen
 	sigs.k8s.io/controller-runtime/tools/setup-envtest
 	sigs.k8s.io/controller-tools/cmd/controller-gen
-	sigs.k8s.io/kubebuilder/v3/cmd
+	sigs.k8s.io/kubebuilder/v4/cmd
 	sigs.k8s.io/kustomize/kustomize/v5
 )
 

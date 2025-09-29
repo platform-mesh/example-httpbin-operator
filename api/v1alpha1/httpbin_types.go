@@ -20,6 +20,26 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// HttpBinConditionType represents a condition type for HttpBin
+type HttpBinConditionType string
+
+// HttpBinConditionReason represents a reason for a condition's last transition
+type HttpBinConditionReason string
+
+const (
+	// HttpBinConditionTypeReady represents whether the HttpBin resource is fully available.
+	HttpBinConditionTypeReady = "Ready"
+
+	// HttpBinConditionReasonDeploymentReady means the Deployment is available and serving.
+	HttpBinConditionReasonDeploymentReady = "DeploymentReady"
+
+	// HttpBinConditionReasonDeploymentProgressing means the Deployment exists but is not yet available.
+	HttpBinConditionReasonDeploymentProgressing = "DeploymentProgressing"
+
+	// HttpBinConditionReasonDeploymentFailed means the Deployment could not be created.
+	HttpBinConditionReasonDeploymentFailed = "DeploymentFailed"
+)
+
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
@@ -38,6 +58,10 @@ type HttpBinSpec struct {
 
 // HttpBinStatus defines the observed state of HttpBin
 type HttpBinStatus struct {
+	// Conditions represent the latest available observations of an object's state
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
 	// URL is the HTTPS URL for accessing the httpbin service
 	// Format: https://HOST
 	// +optional

@@ -20,6 +20,31 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// HttpBinDeploymentConditionType represents a condition type for HttpBinDeployment
+type HttpBinDeploymentConditionType string
+
+// HttpBinDeploymentConditionReason represents a reason for a condition status change
+type HttpBinDeploymentConditionReason string
+
+const (
+	// HttpBinDeploymentConditionReady indicates that the HttpBin instance is ready
+	HttpBinDeploymentConditionTypeReady = "Ready"
+	// HttpBinDeploymentConditionTypeServiceExposed indicates that the HttpBin instance Service ports or ingress have been created.
+	HttpBinDeploymentConditionTypeServiceExposed = "ServiceExposed"
+	// HttpBinDeploymentConditionTypeHttpBinInstanceCreated indicates that the HttpBin instance Deployment has been created.
+	HttpBinDeploymentConditionTypeHttpBinInstanceCreated = "HttpBinInstanceCreated"
+	// HttpBinDeploymentConditionTypeEndpointReady indicates that the HttpBin instance Endpoint is up and ready to serve.
+	HttpBinDeploymentConditionTypeEndpointReady = "HttpBinEndpointReady"
+	// HttpBinDeploymentConditionReasonReady means the HttpBin instance components are ready.
+	HttpBinDeploymentConditionReasonReady = "Ready"
+	// HttpBinDeploymentConditionReasonHttpBinInstanceProgressing means the HttpBin instance Deployment is in progress.
+	HttpBinDeploymentConditionReasonHttpBinInstanceProgressing = "HttpBinInstanceProgressing"
+	// HttpBinDeploymentConditionReasonDeploymentFailed means the HttpBin instance Deployment failed to be created.
+	HttpBinDeploymentConditionReasonHttpBinInstanceFailed = "HttpBinInstanceFailed"
+	// HttpBinDeploymentConditionReasonServiceFailed means the HttpBin instance Service ports or ingress failed to be created.
+	HttpBinDeploymentConditionReasonHttpBinServiceExposureFailed = "ServiceExposureFailed"
+)
+
 // ServiceConfig defines the configuration for the HttpBin service
 type ServiceConfig struct {
 	// Name is the name of the service. If not provided, the HttpBinDeployment name will be used.

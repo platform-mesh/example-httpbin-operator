@@ -25,6 +25,7 @@ import (
 	orchestratev1alpha1 "http-operator/api/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -114,11 +115,6 @@ func (r *HttpBinReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		},
 	}
 
-	logger.Info("Created HttpBinDeployment object",
-		"HttpBinDeployment.Name", httpBinDeployment.Name,
-		"HttpBinDeployment.Namespace", httpBinDeployment.Namespace,
-		"HttpBinDeployment.Spec", httpBinDeployment.Spec)
-
 	// Set HttpBin instance as the owner and controller
 	if err := controllerutil.SetControllerReference(httpBin, httpBinDeployment, r.Scheme); err != nil {
 		logger.Error(err, "Failed to set controller reference",
@@ -145,12 +141,16 @@ func (r *HttpBinReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 				"error_forbidden", errors.IsForbidden(err),
 				"error_invalid", errors.IsInvalid(err),
 				"error_already_exists", errors.IsAlreadyExists(err))
+
+			setHttpBinConditionStatusCondition(httpBin, metav1.ConditionFalse, orchestratev1alpha1.HttpBinConditionReasonDeploymentFailed, "Failed to create HttpBinDeployment: "+err.Error())
+			_ = r.RemoteClient.Status().Update(ctx, httpBin)
 			return ctrl.Result{}, err
 		}
 
 		logger.Info("Successfully created HttpBinDeployment in remote cluster",
 			"HttpBinDeployment.Namespace", httpBinDeployment.Namespace,
-			"HttpBinDeployment.Name", httpBinDeployment.Name)
+			"HttpBinDeployment.Name", httpBinDeployment.Name,
+			"HttpBinDeployment.Spec", httpBinDeployment.Spec)
 
 		// Deployment created successfully - return and requeue
 		return ctrl.Result{Requeue: true}, nil
@@ -170,37 +170,36 @@ func (r *HttpBinReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		"HttpBinDeployment.Spec", found.Spec,
 		"HttpBinDeployment.Status", found.Status)
 
-	// Update HttpBin status based on HttpBinDeployment status
-	statusNeedsUpdate := false
+	httpBin.Status.URL = found.Status.URL
+	httpBin.Status.Ready = found.Status.IsDeploymentReady
 
-	// Format URL as https://HOST
-	if found.Status.URL != "" {
-		if httpBin.Status.URL != found.Status.URL {
-			httpBin.Status.URL = found.Status.URL
-			statusNeedsUpdate = true
-		}
+	if found.Status.IsDeploymentReady {
+		setHttpBinConditionStatusCondition(httpBin, metav1.ConditionTrue, orchestratev1alpha1.HttpBinConditionReasonDeploymentReady, "HttpBin is deployed and URL is available")
+	} else {
+		setHttpBinConditionStatusCondition(httpBin, metav1.ConditionFalse, orchestratev1alpha1.HttpBinConditionReasonDeploymentProgressing, "Deployment exists but is not yet available")
 	}
 
-	// Sync ready status from HttpBinDeployment
-	if httpBin.Status.Ready != found.Status.IsDeploymentReady {
-		httpBin.Status.Ready = found.Status.IsDeploymentReady
-		statusNeedsUpdate = true
-	}
+	logger.Info("Updating HttpBin status",
+		"URL", httpBin.Status.URL,
+		"Ready", httpBin.Status.Ready,
+		"Conditions", httpBin.Status.Conditions)
 
-	// Update status if needed
-	if statusNeedsUpdate {
-		logger.Info("Updating HttpBin status",
-			"URL", httpBin.Status.URL,
-			"Ready", httpBin.Status.Ready)
-
-		err = r.RemoteClient.Status().Update(ctx, httpBin)
-		if err != nil {
-			logger.Error(err, "Failed to update HttpBin status")
-			return ctrl.Result{}, err
-		}
+	if err := r.RemoteClient.Status().Update(ctx, httpBin); err != nil {
+		logger.Error(err, "Failed to update HttpBin status")
+		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func setHttpBinConditionStatusCondition(httpBin *orchestratev1alpha1.HttpBin, status metav1.ConditionStatus, reason, message string) {
+	meta.SetStatusCondition(&httpBin.Status.Conditions, metav1.Condition{
+		Type:               orchestratev1alpha1.HttpBinConditionTypeReady,
+		Status:             status,
+		Reason:             reason,
+		Message:            message,
+		ObservedGeneration: httpBin.GetGeneration(),
+	})
 }
 
 // SetupWithManager sets up the controller with the Manager.
