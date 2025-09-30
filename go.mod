@@ -166,7 +166,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/julz/importas v0.2.0 // indirect
 	github.com/karamaru-alpha/copyloopvar v1.2.1 // indirect
-	github.com/kcp-dev/kcp/sdk v0.28.1 // indirect
+	github.com/kcp-dev/kcp/sdk v0.28.3 // indirect
 	github.com/kcp-dev/logicalcluster/v3 v3.0.5 // indirect
 	github.com/kisielk/errcheck v1.9.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.6 // indirect
