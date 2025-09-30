@@ -50,6 +50,10 @@ spec:
                 description: Foo is an example field of HttpBin. Edit httpbin_types.go
                   to remove/update
                 type: string
+              region:
+                description: Region can be used to filter which HttpBin should be
+                  served
+                type: string
             type: object
           status:
             description: HttpBinStatus defines the observed state of HttpBin

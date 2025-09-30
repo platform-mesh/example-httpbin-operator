@@ -54,6 +54,8 @@ type HttpBinSpec struct {
 
 	// Foo is an example field of HttpBin. Edit httpbin_types.go to remove/update
 	Foo string `json:"foo,omitempty"`
+	// Region can be used to filter which HttpBin should be served
+	Region string `json:"region,omitempty"`
 }
 
 // HttpBinStatus defines the observed state of HttpBin
