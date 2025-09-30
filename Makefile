@@ -87,7 +87,7 @@ TEST_NAME ?=
 
 .PHONY: test-e2e
 test-e2e: manifests generate fmt vet ## Run e2e tests. Optionally specify TEST_NAME=<test_name> to run a specific test.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./test/... -v -timeout 30m $(if $(TEST_NAME),-run "^$(TEST_NAME)$$")
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" IMG=$(IMG) go test ./test/... -v -timeout 30m $(if $(TEST_NAME),-run "^$(TEST_NAME)$$")
 
 .PHONY: lint
 lint: ## Run golangci-lint linter
@@ -194,14 +194,16 @@ kind-test: kind-test-cleanup docker-build charts ## Create kind cluster, load im
 	kind load docker-image ${IMG} --name example-httpbin-operator
 	@echo "Installing helm chart..."
 	helm install example-httpbin-operator dist/example-httpbin-operator-0.0.0.tgz \
+		--namespace example-httpbin-operator-system \
+		--set image.tag=$(DOCKER_VERSION) \
 		--create-namespace \
 		--force
 	@echo "Waiting for operator deployment..."
-	kubectl wait --for=condition=available deployment/example-httpbin-operator --timeout=60s
+	kubectl wait --for=condition=available deployment/example-httpbin-operator --namespace example-httpbin-operator-system --timeout=60s
 	@echo "Deployment status:"
-	kubectl get deployment example-httpbin-operator
+	kubectl get deployment example-httpbin-operator --namespace example-httpbin-operator-system
 	@echo "CRD status:"
-	kubectl get crds | grep httpbin
+	kubectl get crds -n example-httpbin-operator-system | grep httpbin
 
 .PHONY: kind-test-cleanup
 kind-test-cleanup: ## Delete the kind test cluster
@@ -225,3 +227,7 @@ kind-test-sample: ## Deploy a sample httpbin deployment to test the operator
 	kubectl apply -f config/samples/orchestrate_v1alpha1_httpbindeployment.yaml
 	@echo "Waiting for deployment to be ready..."
 	kubectl wait --for=condition=available --timeout=60s deployment -l app=httpbin
+
+.PHONY: kind-test-e2e
+kind-test-e2e: kind-test
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" IMG=$(IMG) go test ./test/... -v -timeout 30m $(if $(TEST_NAME),-run "^$(TEST_NAME)$$")
