@@ -175,7 +175,7 @@ chart-push:  ## Push Helm chart to GHCR (after pushing multi-arch container imag
 charts: manifests generate ## Generate and package Helm chart with multi-arch image support. Always runs manifests first to ensure CRDs are up to date
 	$(HELM) dependency update charts/example-httpbin-operator
 	mkdir -p dist
-	$(HELM) package charts/example-httpbin-operator -d dist
+	$(HELM) package charts/example-httpbin-operator -d dist --version $(CHART_VERSION)
 
 ## OCM
 
@@ -195,7 +195,7 @@ kind-test: kind-test-cleanup docker-build charts ## Create kind cluster, load im
 	@echo "Loading operator image into kind..."
 	$(KIND) load docker-image ${IMG} --name example-httpbin-operator
 	@echo "Installing helm chart..."
-	$(HELM) install example-httpbin-operator dist/example-httpbin-operator-0.0.0.tgz \
+	$(HELM) install example-httpbin-operator dist/example-httpbin-operator-$(CHART_VERSION).tgz \
 		--namespace example-httpbin-operator-system \
 		--set image.tag=$(DOCKER_VERSION) \
 		--create-namespace \
