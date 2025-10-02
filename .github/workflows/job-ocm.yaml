@@ -17,6 +17,7 @@ permissions:
 
 jobs:
   release:
+    if: ${{ github.ref == 'refs/heads/main' }}
     uses: platform-mesh/.github/.github/workflows/job-ocm.yml@main
     secrets: inherit
     with:
