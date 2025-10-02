@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	// OperatorImage is the image name for the operator
-	OperatorImage = "controller:dev"
+	// DefaultOperatorImage is the image name for the operator
+	DefaultOperatorImage = "controller:dev"
 	// OperatorName is the name of the operator
 	OperatorName = "example-httpbin-operator"
 	// OperatorNs is the namespace where the operator is deployed

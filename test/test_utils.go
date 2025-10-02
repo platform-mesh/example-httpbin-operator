@@ -30,7 +30,7 @@ func setupOperatorTest(ctx context.Context, t *testing.T, cfg *envconf.Config) c
 	// Wait for operator deployment
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      OperatorName + "-controller-manager",
+			Name:      OperatorName,
 			Namespace: OperatorNs,
 		},
 	}
@@ -117,7 +117,7 @@ func createHttpBinDeployment(ctx context.Context, k8sClient client.Client, t *te
 	// Wait for Service to be created and verify it
 	service := &corev1.Service{}
 	serviceName := types.NamespacedName{
-		Name:      name,
+		Name:      "httpbin-" + name,
 		Namespace: "default",
 	}
 

@@ -1,5 +1,7 @@
 GO ?= go
 KUBECTL ?= kubectl
+KIND ?= kind
+HELM ?= helm
 KUSTOMIZE ?= $(GO) tool kustomize
 CONTROLLER_GEN ?= $(GO) tool controller-gen
 API_GEN ?= $(GO) tool apigen
@@ -87,7 +89,7 @@ TEST_NAME ?=
 
 .PHONY: test-e2e
 test-e2e: manifests generate fmt vet ## Run e2e tests. Optionally specify TEST_NAME=<test_name> to run a specific test.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./test/... -v -timeout 30m $(if $(TEST_NAME),-run "^$(TEST_NAME)$$")
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" SETUP_CLUSTER=true IMG=$(IMG) go test ./test/... -v -timeout 30m $(if $(TEST_NAME),-run "^$(TEST_NAME)$$")
 
 .PHONY: lint
 lint: ## Run golangci-lint linter
@@ -126,7 +128,7 @@ docker-build: manifests generate fmt vet ## Build docker image with the manager.
 KIND_CLUSTER ?= kind
 
 docker-install: docker-build
-	kind load docker-image $(IMG) --name $(KIND_CLUSTER)
+	$(KIND) load docker-image $(IMG) --name $(KIND_CLUSTER)
 
 .PHONY: build-installer
 build-installer: manifests generate kustomize ## Generate a consolidated YAML with CRDs and deployment.
@@ -166,14 +168,14 @@ print-helm-version:
 .PHONY: chart-push
 chart-push:  ## Push Helm chart to GHCR (after pushing multi-arch container image)
 	@echo "Pushing Helm chart to $(REGISTRY)..."
-	helm push dist/example-httpbin-operator-$(CHART_VERSION).tgz oci://$(REGISTRY)/charts
-	helm push dist/example-httpbin-operator-crds-$(CHART_VERSION).tgz oci://$(REGISTRY)/charts
+	$(HELM) push dist/example-httpbin-operator-$(CHART_VERSION).tgz oci://$(REGISTRY)/charts
+	$(HELM) push dist/example-httpbin-operator-crds-$(CHART_VERSION).tgz oci://$(REGISTRY)/charts
 
 .PHONY: charts
 charts: manifests generate ## Generate and package Helm chart with multi-arch image support. Always runs manifests first to ensure CRDs are up to date
-	helm dependency update charts/example-httpbin-operator
+	$(HELM) dependency update charts/example-httpbin-operator
 	mkdir -p dist
-	helm package charts/example-httpbin-operator -d dist
+	$(HELM) package charts/example-httpbin-operator -d dist
 
 ## OCM
 
@@ -188,40 +190,44 @@ print-ocm-version: ## Print the OCM version
 .PHONY: kind-test
 kind-test: kind-test-cleanup docker-build charts ## Create kind cluster, load image, and deploy helm chart
 	@echo "Creating kind cluster..."
-	kind create cluster --name example-httpbin-operator
-	kind get kubeconfig --name example-httpbin-operator > msp.kubeconfig.yaml
+	$(KIND) create cluster --name example-httpbin-operator
+	$(KIND) get kubeconfig --name example-httpbin-operator > msp.kubeconfig.yaml
 	@echo "Loading operator image into kind..."
-	kind load docker-image ${IMG} --name example-httpbin-operator
+	$(KIND) load docker-image ${IMG} --name example-httpbin-operator
 	@echo "Installing helm chart..."
-	helm install example-httpbin-operator dist/example-httpbin-operator-0.0.0.tgz \
+	$(HELM) install example-httpbin-operator dist/example-httpbin-operator-0.0.0.tgz \
+		--namespace example-httpbin-operator-system \
+		--set image.tag=$(DOCKER_VERSION) \
 		--create-namespace \
 		--force
 	@echo "Waiting for operator deployment..."
-	kubectl wait --for=condition=available deployment/example-httpbin-operator --timeout=60s
+	$(KUBECTL) wait --for=condition=available deployment/example-httpbin-operator --namespace example-httpbin-operator-system --timeout=60s
 	@echo "Deployment status:"
-	kubectl get deployment example-httpbin-operator
+	$(KUBECTL) get deployment example-httpbin-operator --namespace example-httpbin-operator-system
 	@echo "CRD status:"
-	kubectl get crds | grep httpbin
+	$(KUBECTL) get crds -n example-httpbin-operator-system | grep httpbin
 
 .PHONY: kind-test-cleanup
 kind-test-cleanup: ## Delete the kind test cluster
 	@echo "Deleting kind cluster..."
-	@kind delete cluster --name example-httpbin-operator 2>/dev/null || true
-	@kind delete cluster --name example-httpbin-operator-crds 2>/dev/null || true
+	@$(KIND) delete cluster --name example-httpbin-operator 2>/dev/null || true
+	@$(KIND) delete cluster --name example-httpbin-operator-crds 2>/dev/null || true
 
 .PHONY: kind-test-crds
-kind-test-crds: charts ## Create kind cluster and deploy helm chart CRDs only
+kind-test-crds: ## Create kind cluster and deploy CRDs only
 	@echo "Creating kind cluster..."
-	kind create cluster --name example-httpbin-operator-crds
-	kind get kubeconfig --name example-httpbin-operator-crds > msp-cp.kubeconfig.yaml
-	@echo "Installing helm chart CRDs only..."
-	helm install example-httpbin-operator dist/example-httpbin-operator-crds-0.0.0.tgz
+	$(KIND) create cluster --name example-httpbin-operator-crds
+	$(KIND) get kubeconfig --name example-httpbin-operator-crds > msp-cp.kubeconfig.yaml
+	@echo "Installing CRDs only..."
+	$(KUBECTL) apply -f charts/example-httpbin-operator/crds/
 	@echo "CRD status:"
-	kubectl get crds | grep httpbin
+	$(KUBECTL) get crds | grep httpbin
 
 .PHONY: kind-test-sample
-kind-test-sample: ## Deploy a sample httpbin deployment to test the operator
-	@echo "Creating sample httpbin deployment..."
-	kubectl apply -f config/samples/orchestrate_v1alpha1_httpbindeployment.yaml
-	@echo "Waiting for deployment to be ready..."
-	kubectl wait --for=condition=available --timeout=60s deployment -l app=httpbin
+kind-test-sample: ## Deploy a sample httpbin to test the operator
+	@echo "Creating sample httpbin..."
+	$(KUBECTL) apply -f examples/httpbin.yaml
+
+.PHONY: kind-test-e2e
+kind-test-e2e: kind-test
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" IMG=$(IMG) go test ./test/... -v -timeout 30m $(if $(TEST_NAME),-run "^$(TEST_NAME)$$")

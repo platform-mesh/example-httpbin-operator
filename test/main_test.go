@@ -34,7 +34,7 @@ import (
 	"sigs.k8s.io/e2e-framework/support/kind"
 )
 
-func setupOperator(ctx context.Context, cfg *envconf.Config) error {
+func setupOperator(ctx context.Context, cfg *envconf.Config, operatorImage string) error {
 	// Get project root directory
 	projectRoot := filepath.Join("..", "")
 
@@ -47,7 +47,7 @@ func setupOperator(ctx context.Context, cfg *envconf.Config) error {
 	}
 
 	// Build operator image
-	cmd = exec.Command("make", "-C", projectRoot, "docker-build", "IMG="+OperatorImage)
+	cmd = exec.Command("make", "-C", projectRoot, "docker-build", "IMG="+operatorImage)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -81,7 +81,7 @@ func setupOperator(ctx context.Context, cfg *envconf.Config) error {
 	}
 
 	// Deploy operator
-	cmd = exec.Command("make", "-C", projectRoot, "deploy", "IMG="+OperatorImage)
+	cmd = exec.Command("make", "-C", projectRoot, "deploy", "IMG="+operatorImage)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -94,18 +94,22 @@ func setupOperator(ctx context.Context, cfg *envconf.Config) error {
 func TestMain(m *testing.M) {
 	// Create test environment
 	TestEnv = env.NewWithConfig(envconf.New())
+	operatorImage := getOperatorImage()
+	setupCluster := os.Getenv("SETUP_CLUSTER")
 
 	// Setup
-	TestEnv.Setup(
-		envfuncs.CreateCluster(kind.NewProvider(), OperatorName),
-		envfuncs.LoadDockerImageToCluster(OperatorName, OperatorImage),
-		func(ctx context.Context, cfg *envconf.Config) (context.Context, error) {
-			if err := setupOperator(ctx, cfg); err != nil {
-				return ctx, err
-			}
-			return ctx, nil
-		},
-	)
+	if setupCluster == "true" {
+		TestEnv.Setup(
+			envfuncs.CreateCluster(kind.NewProvider(), OperatorName),
+			envfuncs.LoadDockerImageToCluster(OperatorName, operatorImage),
+			func(ctx context.Context, cfg *envconf.Config) (context.Context, error) {
+				if err := setupOperator(ctx, cfg, operatorImage); err != nil {
+					return ctx, err
+				}
+				return ctx, nil
+			},
+		)
+	}
 
 	// Run test suite
 	testResult := TestEnv.Run(m)
@@ -121,4 +125,13 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(testResult)
+}
+
+func getOperatorImage() string {
+	img := os.Getenv("IMG")
+	if img != "" {
+		return img
+	}
+	// fallback to default if not set
+	return DefaultOperatorImage
 }
