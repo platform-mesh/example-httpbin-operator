@@ -2,20 +2,20 @@
 # ocm get resources ghcr.io/platform-mesh/ocm//github.com/platform-mesh/example-httpbin-operator --latest -r -o treewide
 components:
   - name: github.com/platform-mesh/example-httpbin-operator
-    version: "${ env.VERSION }"
+    version: 0.1.0
     provider:
       name: platform-mesh
     resources:
       - name: oci-helm-chart-example-httpbin-operator
         type: helmChart
-        version: "${ env.VERSION }"
+        version: 0.1.0
         access:
           type: ociArtifact
           imageReference: ghcr.io/platform-mesh/charts/example-httpbin-operator:0.1.0
 
       - name: image-example-httpbin-operator
         type: ociImage
-        version: "${ env.VERSION }"
+        version: 0.1.0
         access:
           type: ociArtifact
           imageReference: ghcr.io/platform-mesh/example-httpbin-operator:0.1.0

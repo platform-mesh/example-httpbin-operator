@@ -10,21 +10,6 @@ on:
       - main
     paths:
       - 'ocm-config/**'
-  workflow_call:
-    inputs:
-      chartPath:
-        required: true
-        type: string
-      componentName:
-        required: true
-        type: string
-      componentConstructorFile:
-        required: false
-        type: string
-        default: ./ocm-config/component-constructor.yaml
-      ocmRegistryUrl:
-        type: string
-        default: ghcr.io/platform-mesh
 
 permissions:
   contents: read # to checkout the repository
