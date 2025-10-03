@@ -1,0 +1,22 @@
+name: OCM
+on:
+  push:
+    tags:
+      - 'ocm-*'
+    branches:
+      - main
+
+permissions:
+  contents: read # to checkout the repository
+  packages: write # to create packages
+
+jobs:
+  release:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    uses: platform-mesh/.github/.github/workflows/job-ocm.yml@main
+    secrets: inherit
+    with:
+      chartPath: charts/example-httpbin-operator
+      componentName: github.com/platform-mesh/example-httpbin-operator
+      componentConstructorFile: ./component-constructor.yaml
+      ocmRegistryUrl: ghcr.io/platform-mesh
