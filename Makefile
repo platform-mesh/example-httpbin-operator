@@ -2,6 +2,7 @@ GO ?= go
 KUBECTL ?= kubectl
 KIND ?= kind
 HELM ?= helm
+TASK ?= task
 KUSTOMIZE ?= $(GO) tool kustomize
 CONTROLLER_GEN ?= $(GO) tool controller-gen
 API_GEN ?= $(GO) tool apigen
@@ -231,3 +232,10 @@ kind-test-sample: ## Deploy a sample httpbin to test the operator
 .PHONY: kind-test-e2e
 kind-test-e2e: kind-test
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" IMG=$(IMG) go test ./test/... -v -timeout 30m $(if $(TEST_NAME),-run "^$(TEST_NAME)$$")
+
+.PHONY: local-platform-mesh
+local-platform-mesh: ## Install local platform mesh components
+	rm -rf helm-charts || true
+	git clone https://github.com/platform-mesh/helm-charts.git
+	cd helm-charts
+	$(TASK) local-setup-cached
