@@ -234,8 +234,16 @@ kind-test-e2e: kind-test
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" IMG=$(IMG) go test ./test/... -v -timeout 30m $(if $(TEST_NAME),-run "^$(TEST_NAME)$$")
 
 .PHONY: local-platform-mesh
-local-platform-mesh: ## Install local platform mesh components
-	rm -rf helm-charts || true
-	git clone https://github.com/platform-mesh/helm-charts.git
-	cd helm-charts
-	$(TASK) local-setup-cached
+local-platform-mesh: setup-hosts ## Install local platform mesh components
+	rm -rf .helm-charts || true
+	 git clone https://github.com/platform-mesh/helm-charts.git -b fix/keycloak-localsetup -o platform-mesh .helm-charts
+	cd .helm-charts && $(TASK) local-setup-cached
+
+.PHONY: setup-hosts
+setup-hosts: ## Add local development hosts to /etc/hosts
+	@echo "Adding development hosts to /etc/hosts..."
+	@if ! grep -q "portal.dev.local" /etc/hosts; then \
+		echo "127.0.0.1 default.portal.dev.local portal.dev.local kcp.api.portal.dev.local" | sudo tee -a /etc/hosts; \
+	else \
+		echo "Hosts already configured"; \
+	fi
