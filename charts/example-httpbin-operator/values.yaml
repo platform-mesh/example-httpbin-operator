@@ -28,7 +28,7 @@ operator:
 image:
   registry: ghcr.io
   repository: platform-mesh/example-httpbin-operator
-  tag: 0.1.0
+  tag: 0.1.0@sha256:ad90835ced644c83e7732aa3f36d7959a4ec02d66b7d35b3d834c672b3b0deff
   pullPolicy: IfNotPresent
 
 controllerManager:
