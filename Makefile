@@ -2,6 +2,7 @@ GO ?= go
 KUBECTL ?= kubectl
 KIND ?= kind
 HELM ?= helm
+TASK ?= task
 KUSTOMIZE ?= $(GO) tool kustomize
 CONTROLLER_GEN ?= $(GO) tool controller-gen
 API_GEN ?= $(GO) tool apigen
@@ -231,3 +232,26 @@ kind-test-sample: ## Deploy a sample httpbin to test the operator
 .PHONY: kind-test-e2e
 kind-test-e2e: kind-test
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" IMG=$(IMG) go test ./test/... -v -timeout 30m $(if $(TEST_NAME),-run "^$(TEST_NAME)$$")
+
+.PHONY: local-platform-mesh
+local-platform-mesh: setup-hosts ## Install local platform mesh components
+	rm -rf .helm-charts || true
+	git clone https://github.com/platform-mesh/helm-charts.git -o platform-mesh .helm-charts
+	cp hack/ocm/Taskfile.yaml .helm-charts/Taskfile.yaml
+	cp hack/ocm/component-constructor-prerelease.yaml .helm-charts/.ocm/component-constructor-prerelease.yaml
+	cd .helm-charts && $(TASK) local-setup-cached
+	@echo "preparing ocm deployment..."
+	cd .helm-charts && $(TASK) ocm:deploy
+	cd .helm-charts && $(TASK) ocm:build ocm:apply
+	cp hack/ocm/platform-mesh.yaml .helm-charts/local-setup/kustomize/components/platform-mesh-operator-resource/platform-mesh.yaml
+	cd .helm-charts && $(TASK) local-setup-cached:iterate
+
+
+.PHONY: setup-hosts
+setup-hosts: ## Add local development hosts to /etc/hosts
+	@echo "Adding development hosts to /etc/hosts..."
+	@if ! grep -q "portal.dev.local" /etc/hosts; then \
+		echo "127.0.0.1 demo.portal.dev.local default.portal.dev.local portal.dev.local kcp.api.portal.dev.local" | sudo tee -a /etc/hosts; \
+	else \
+		echo "Hosts already configured"; \
+	fi

@@ -1,5 +1,5 @@
 # Default values for example-httpbin-operator
-
+enabled: true
 nameOverride: ""
 fullnameOverride: ""
 
@@ -26,6 +26,7 @@ operator:
 
 # Image configuration
 image:
+  name: ghcr.io/platform-mesh/example-httpbin-operator
   registry: ghcr.io
   repository: platform-mesh/example-httpbin-operator
   tag: 0.1.0

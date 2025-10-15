@@ -36,3 +36,4 @@ Chart.lock
 charts/**/*.tar.gz
 charts/**/*.tgz
 /dist
+.helm-charts
