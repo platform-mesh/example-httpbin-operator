@@ -39,23 +39,10 @@ spec:
   resource:
     byReference:
       resource:
-        name: example-httpbin-operator
+        name: oci-helm-chart-example-httpbin-operator
   ocmConfig:
     - kind: Repository
       apiVersion: delivery.ocm.software/v1alpha1
       name: example-httpbin-operator
     - kind: Secret
       name: github-oci-pull-secret
----
-apiVersion: delivery.ocm.software/v1alpha1
-kind: Deployer
-metadata:
-  name: example-httpbin-operator
-spec:
-  resourceRef:
-    name: example-httpbin-operator
-  ocmConfig:
-    - kind: Repository
-      apiVersion: delivery.ocm.software/v1alpha1
-      name: example-httpbin-operator
-      namespace: default

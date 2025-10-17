@@ -24,5 +24,7 @@ metadata:
 spec:
   interval: 10m
   url: oci://ghcr.io/platform-mesh/charts/example-httpbin-operator
+  ref:
+    tag: 0.1.0
   secretRef:
     name: github-oci-pull-secret
