@@ -1,0 +1,28 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: example-httpbin-operator
+spec:
+  releaseName: example-httpbin-operator
+  interval: 10m
+  timeout: 5m
+  chartRef:
+    kind: OCIRepository
+    name: example-httpbin-operator
+    namespace: default
+  install:
+    crds: CreateReplace
+  values:
+    imagePullSecrets:
+    - name: github-oci-pull-secret
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: example-httpbin-operator
+  namespace: default
+spec:
+  interval: 10m
+  url: oci://ghcr.io/platform-mesh/charts/example-httpbin-operator
+  secretRef:
+    name: github-oci-pull-secret

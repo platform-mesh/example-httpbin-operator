@@ -237,14 +237,7 @@ kind-test-e2e: kind-test
 local-platform-mesh: setup-hosts ## Install local platform mesh components
 	rm -rf .helm-charts || true
 	git clone https://github.com/platform-mesh/helm-charts.git -o platform-mesh .helm-charts
-	cp hack/ocm/Taskfile.yaml .helm-charts/Taskfile.yaml
-	cp hack/ocm/component-constructor-prerelease.yaml .helm-charts/.ocm/component-constructor-prerelease.yaml
 	cd .helm-charts && $(TASK) local-setup-cached
-	@echo "preparing ocm deployment..."
-	cd .helm-charts && $(TASK) ocm:deploy
-	cd .helm-charts && $(TASK) ocm:build ocm:apply
-	cp hack/ocm/platform-mesh.yaml .helm-charts/local-setup/kustomize/components/platform-mesh-operator-resource/platform-mesh.yaml
-	cd .helm-charts && $(TASK) local-setup-cached:iterate
 
 
 .PHONY: setup-hosts
@@ -255,3 +248,22 @@ setup-hosts: ## Add local development hosts to /etc/hosts
 	else \
 		echo "Hosts already configured"; \
 	fi
+
+.PHONY: setup-kcp-provider
+setup-kcp-provider: ## Set up KCP provider
+	@echo "Setting up KCP provider..."
+	export KUBECONFIG=.helm-charts/.secret/kcp/admin.kubeconfig
+	$(KUBECTL) ws create providers --type=root:providers
+	$(KUBECTL) ws create httpbin-provider --type=root:provider
+	$(KUBECTL) apply -f platform-mesh/provider-setup
+
+.PHONY: local-oci-pull-secret
+local-oci-pull-secret: ## Create a k8s secret for authenticating to GHCR (export GITHUB_OCI_USER and GITHUB_OCI_PASS first)
+	@if [ -z "$$GITHUB_OCI_USER" ] || [ -z "$$GITHUB_OCI_PASS" ]; then \
+		echo "Please export GITHUB_OCI_USER and GITHUB_OCI_PASS environment variables."; \
+		exit 1; \
+	fi
+	kubectl create secret docker-registry github-oci-pull-secret \
+		--docker-username="$$GITHUB_OCI_USER" \
+		--docker-password="$$GITHUB_OCI_PASS" \
+		--docker-server=ghcr.io/platform-mesh

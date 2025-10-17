@@ -1,0 +1,10 @@
+apiVersion: apis.kcp.io/v1alpha1
+kind: APIExport
+metadata:
+  annotations:
+  name: httpbin.orchestrate.platform-mesh.io
+  labels:
+    ui.platform-mesh.io/content-for: httpbin.orchestrate.platform-mesh.io
+spec:
+  # latestResourceSchemas:
+  #   - ve9552117.httpbins.orchestrate.platform-mesh.io

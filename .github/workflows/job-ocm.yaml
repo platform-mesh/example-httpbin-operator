@@ -3,8 +3,6 @@ on:
   push:
     tags:
       - 'ocm-*'
-    branches:
-      - main
 
 permissions:
   contents: read # to checkout the repository

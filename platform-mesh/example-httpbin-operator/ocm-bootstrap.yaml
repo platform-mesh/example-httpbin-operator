@@ -1,0 +1,55 @@
+# Apply these manifests to bootstrap the OCM repository and components
+apiVersion: delivery.ocm.software/v1alpha1
+kind: Repository
+metadata:
+  name: example-httpbin-operator
+spec:
+  repositorySpec:
+    baseUrl: ghcr.io/platform-mesh
+    type: OCIRegistry
+  interval: 10m
+---
+apiVersion: delivery.ocm.software/v1alpha1
+kind: Component
+metadata:
+  name: example-httpbin-operator
+spec:
+  component: github.com/platform-mesh/example-httpbin-operator
+  repositoryRef:
+    name: example-httpbin-operator
+  semver: 0.1.0
+  interval: 10m
+  ocmConfig:
+    - kind: Repository
+      apiVersion: delivery.ocm.software/v1alpha1
+      name: example-httpbin-operator
+---
+apiVersion: delivery.ocm.software/v1alpha1
+kind: Resource
+metadata:
+  name: example-httpbin-operator
+spec:
+  componentRef:
+    name: example-httpbin-operator
+  interval: 1m
+  resource:
+    byReference:
+      resource:
+        name: example-httpbin-operator
+  ocmConfig:
+    - kind: Repository
+      apiVersion: delivery.ocm.software/v1alpha1
+      name: example-httpbin-operator
+---
+apiVersion: delivery.ocm.software/v1alpha1
+kind: Deployer
+metadata:
+  name: example-httpbin-operator
+spec:
+  resourceRef:
+    name: example-httpbin-operator
+  ocmConfig:
+    - kind: Repository
+      apiVersion: delivery.ocm.software/v1alpha1
+      name: example-httpbin-operator
+      namespace: default
