@@ -267,3 +267,7 @@ local-oci-pull-secret: ## Create a k8s secret for authenticating to GHCR (export
 		--docker-username="$$GITHUB_OCI_USER" \
 		--docker-password="$$GITHUB_OCI_PASS" \
 		--docker-server=ghcr.io/platform-mesh
+
+.PHONY: local-bootstrap-helm-release
+local-bootstrap-helm-release: local-oci-pull-secret ## Bootstrap OCM Helm release for local development
+	$(KUBECTL) apply -f platform-mesh/example-httpbin-operator/pullsecret
