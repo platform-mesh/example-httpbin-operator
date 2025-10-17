@@ -234,11 +234,13 @@ kind-test-e2e: kind-test
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" IMG=$(IMG) go test ./test/... -v -timeout 30m $(if $(TEST_NAME),-run "^$(TEST_NAME)$$")
 
 .PHONY: local-platform-mesh
-local-platform-mesh: setup-hosts ## Install local platform mesh components
+local-platform-mesh: install-platform-mesh local-bootstrap-helm-release
+
+.PHONY: install-platform-mesh
+install-platform-mesh: setup-hosts ## Install local platform mesh components
 	rm -rf .helm-charts || true
 	git clone https://github.com/platform-mesh/helm-charts.git -o platform-mesh .helm-charts
 	cd .helm-charts && $(TASK) local-setup-cached
-
 
 .PHONY: setup-hosts
 setup-hosts: ## Add local development hosts to /etc/hosts
