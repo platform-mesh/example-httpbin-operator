@@ -1,10 +1,26 @@
 # yaml-language-server: $schema= https://ocm.software/schemas/configuration-schema.yaml
 # ocm get resources ghcr.io/platform-mesh/ocm//github.com/platform-mesh/example-httpbin-operator --latest -r -o treewide
 components:
+  - name: github.com/kcp-dev/api-syncagent
+    version: 0.4.2
+    provider:
+      name: kcp
+    resources:
+      - name: chart
+        type: helmChart
+        version: 0.4.2
+        access:
+          type: helm
+          helmChart: api-syncagent:0.4.2
+          helmRepository: https://kcp-dev.github.io/helm-charts
   - name: github.com/platform-mesh/example-httpbin-operator
     version: 0.1.0
     provider:
       name: platform-mesh
+    componentReferences:
+      - name: api-syncagent
+        componentName: github.com/kcp-dev/api-syncagent
+        version: 0.4.2
     resources:
       - name: oci-helm-chart-example-httpbin-operator
         type: helmChart
