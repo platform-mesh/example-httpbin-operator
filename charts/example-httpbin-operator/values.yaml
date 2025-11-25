@@ -40,10 +40,12 @@ controllerManager:
 rbac:
   enable: true
 
-# [API-SYNCAGENT]: RBAC for kcp api-syncagent integration
+# [API-SYNCAGENT]: kcp api-syncagent integration
 apiSyncagent:
   rbac:
-    enable: true
+    enable: false
+  publishedResources:
+    enable: false
   serviceAccount:
     name: api-syncagent
     namespace: platform-mesh-system
