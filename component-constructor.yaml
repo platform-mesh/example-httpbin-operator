@@ -2,16 +2,16 @@
 # ocm get resources ghcr.io/platform-mesh/ocm//github.com/platform-mesh/example-httpbin-operator --latest -r -o treewide
 components:
   - name: github.com/kcp-dev/api-syncagent
-    version: 0.4.2
+    version: 0.4.3
     provider:
       name: kcp
     resources:
       - name: chart
         type: helmChart
-        version: 0.4.2
+        version: 0.4.3
         access:
           type: helm
-          helmChart: api-syncagent:0.4.2
+          helmChart: api-syncagent:0.4.3
           helmRepository: https://kcp-dev.github.io/helm-charts
   - name: github.com/platform-mesh/example-httpbin-operator
     version: 0.1.0
@@ -20,7 +20,7 @@ components:
     componentReferences:
       - name: api-syncagent
         componentName: github.com/kcp-dev/api-syncagent
-        version: 0.4.2
+        version: 0.4.3
     resources:
       - name: oci-helm-chart-example-httpbin-operator
         type: helmChart
