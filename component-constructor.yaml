@@ -14,7 +14,7 @@ components:
           helmChart: api-syncagent:0.4.3
           helmRepository: https://kcp-dev.github.io/helm-charts
   - name: github.com/platform-mesh/example-httpbin-operator
-    version: 0.1.0
+    version: 0.2.0
     provider:
       name: platform-mesh
     componentReferences:
