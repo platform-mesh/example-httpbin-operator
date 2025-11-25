@@ -170,23 +170,29 @@ func (r *HttpBinReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		"HttpBinDeployment.Spec", found.Spec,
 		"HttpBinDeployment.Status", found.Status)
 
-	httpBin.Status.URL = found.Status.URL
-	httpBin.Status.Ready = found.Status.IsDeploymentReady
+	// Only update status if something actually changed
+	statusNeedsUpdate := httpBin.Status.URL != found.Status.URL ||
+		httpBin.Status.Ready != found.Status.IsDeploymentReady
 
-	if found.Status.IsDeploymentReady {
-		setHttpBinConditionStatusCondition(httpBin, metav1.ConditionTrue, orchestratev1alpha1.HttpBinConditionReasonDeploymentReady, "HttpBin is deployed and URL is available")
-	} else {
-		setHttpBinConditionStatusCondition(httpBin, metav1.ConditionFalse, orchestratev1alpha1.HttpBinConditionReasonDeploymentProgressing, "Deployment exists but is not yet available")
-	}
+	if statusNeedsUpdate {
+		httpBin.Status.URL = found.Status.URL
+		httpBin.Status.Ready = found.Status.IsDeploymentReady
 
-	logger.Info("Updating HttpBin status",
-		"URL", httpBin.Status.URL,
-		"Ready", httpBin.Status.Ready,
-		"Conditions", httpBin.Status.Conditions)
+		if found.Status.IsDeploymentReady {
+			setHttpBinConditionStatusCondition(httpBin, metav1.ConditionTrue, orchestratev1alpha1.HttpBinConditionReasonDeploymentReady, "HttpBin is deployed and URL is available")
+		} else {
+			setHttpBinConditionStatusCondition(httpBin, metav1.ConditionFalse, orchestratev1alpha1.HttpBinConditionReasonDeploymentProgressing, "Deployment exists but is not yet available")
+		}
 
-	if err := r.RemoteClient.Status().Update(ctx, httpBin); err != nil {
-		logger.Error(err, "Failed to update HttpBin status")
-		return ctrl.Result{}, err
+		logger.Info("Updating HttpBin status",
+			"URL", httpBin.Status.URL,
+			"Ready", httpBin.Status.Ready,
+			"Conditions", httpBin.Status.Conditions)
+
+		if err := r.RemoteClient.Status().Update(ctx, httpBin); err != nil {
+			logger.Error(err, "Failed to update HttpBin status")
+			return ctrl.Result{}, err
+		}
 	}
 
 	return ctrl.Result{}, nil
