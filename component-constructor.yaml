@@ -24,10 +24,10 @@ components:
     resources:
       - name: oci-helm-chart-example-httpbin-operator
         type: helmChart
-        version: 0.1.0
+        version: 0.2.0
         access:
           type: ociArtifact
-          imageReference: ghcr.io/platform-mesh/charts/example-httpbin-operator:0.1.0
+          imageReference: ghcr.io/platform-mesh/charts/example-httpbin-operator:0.2.0
       - name: image-example-httpbin-operator
         type: ociImage
         version: 0.1.0
