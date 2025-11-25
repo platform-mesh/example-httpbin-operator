@@ -40,6 +40,16 @@ controllerManager:
 rbac:
   enable: true
 
+# [API-SYNCAGENT]: kcp api-syncagent integration
+apiSyncagent:
+  rbac:
+    enable: false
+  publishedResources:
+    enable: false
+  serviceAccount:
+    name: api-syncagent
+    namespace: platform-mesh-system
+
 podAnnotations: {}
 podLabels: {}
 
