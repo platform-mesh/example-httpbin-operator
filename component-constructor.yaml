@@ -14,7 +14,7 @@ components:
           helmChart: api-syncagent:0.4.3
           helmRepository: https://kcp-dev.github.io/helm-charts
   - name: github.com/platform-mesh/example-httpbin-operator
-    version: 0.2.0
+    version: 0.3.0
     provider:
       name: platform-mesh
     componentReferences:
@@ -24,13 +24,13 @@ components:
     resources:
       - name: oci-helm-chart-example-httpbin-operator
         type: helmChart
+        version: 0.3.0
+        access:
+          type: ociArtifact
+          imageReference: ghcr.io/platform-mesh/charts/example-httpbin-operator:0.3.0
+      - name: image-example-httpbin-operator
+        type: ociImage
         version: 0.2.0
         access:
           type: ociArtifact
-          imageReference: ghcr.io/platform-mesh/charts/example-httpbin-operator:0.2.0
-      - name: image-example-httpbin-operator
-        type: ociImage
-        version: 0.1.0
-        access:
-          type: ociArtifact
-          imageReference: ghcr.io/platform-mesh/example-httpbin-operator:0.1.0
+          imageReference: ghcr.io/platform-mesh/example-httpbin-operator:0.2.0
