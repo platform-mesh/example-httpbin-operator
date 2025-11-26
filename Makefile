@@ -110,8 +110,7 @@ build: manifests generate fmt vet ## Build manager binary.
 run: manifests generate fmt vet ## Run a controller from your host.
 	$(GO) run ./cmd/main.go
 
-DOCKER_VERSION_RAW=$(shell git describe --tags --always --dirty --match 'docker-*')
-DOCKER_VERSION=$(patsubst docker-%,%,$(DOCKER_VERSION_RAW))
+DOCKER_VERSION=dev-$(shell git rev-parse --short HEAD)
 
 .PHONY: print-docker-version
 print-docker-version: ## Print the Docker version

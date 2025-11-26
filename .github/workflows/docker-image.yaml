@@ -29,8 +29,22 @@ jobs:
 
       - id: get-vars
         run: |
-          echo "registry_uri=$(make print-registry)" >> $GITHUB_OUTPUT
-          echo "version=$(make print-docker-version)" >> $GITHUB_OUTPUT
+          # registry from Makefile helper (fallback to GHCR)
+          REGISTRY="$(make print-registry 2>/dev/null || echo ghcr.io/platform-mesh)"
+          echo "registry_uri=${REGISTRY}" >> $GITHUB_OUTPUT
+
+          # Determine version:
+          # - on tag event refs/tags/docker-<version> -> use <version>
+          # - on main branch -> dev-<short-sha>
+          # - otherwise fallback to dev-<short-sha>
+          if [[ "${GITHUB_REF}" == refs/tags/docker-* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/docker-}"
+          else
+            SHORT="$(git rev-parse --short HEAD)"
+            VERSION="dev-${SHORT}"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "image=${REGISTRY}/example-httpbin-operator:${VERSION}" >> $GITHUB_OUTPUT
 
       - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
       - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
