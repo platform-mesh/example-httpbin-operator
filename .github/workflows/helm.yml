@@ -80,6 +80,7 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
+          persist-credentials: true  # Required for chart-releaser to push to gh-pages (v6 defaults to false)
 
       - name: Set HELM_REGISTRY_URI from Makefile
         run: |
