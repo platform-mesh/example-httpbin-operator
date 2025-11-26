@@ -38,3 +38,4 @@ charts/**/*.tgz
 /dist
 .helm-charts
 CLAUDE.md
+CLAUDE.local.md
