@@ -23,4 +23,5 @@ jobs:
       imageTagName: ghcr.io/platform-mesh/example-httpbin-operator
       repoVersionUpdate: platform-mesh/helm-charts
       useMake: true
+      useLocalCoverageConfig: true
 
