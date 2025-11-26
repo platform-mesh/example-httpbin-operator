@@ -1,0 +1,16 @@
+apiVersion: v1
+entries:
+  example-httpbin-operator:
+  - annotations:
+      helm.sh/resource-policy: keep
+    apiVersion: v2
+    appVersion: 0.3.0
+    created: "2025-11-26T10:46:31.194474104Z"
+    description: A Helm chart for deploying the httpbin operator and its CRDs
+    digest: 53f7d2f2e8366f8e7666153a3172f2c2b65b9a04bc43e19d8ae56d9c5726d2d0
+    name: example-httpbin-operator
+    type: application
+    urls:
+    - https://github.com/platform-mesh/example-httpbin-operator/releases/download/example-httpbin-operator-0.3.0/example-httpbin-operator-0.3.0.tgz
+    version: 0.3.0
+generated: "2025-11-26T10:46:31.19447898Z"
