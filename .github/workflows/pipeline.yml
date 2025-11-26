@@ -8,6 +8,10 @@ on:
       - opened
       - synchronize
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   pipe:
     concurrency:
