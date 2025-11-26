@@ -1,0 +1,19 @@
+exclude:
+  paths:
+    - api/v1alpha1 # skipping generated files and crd type definitions
+    - main\.go$ # skip covering main.go
+    - ^cmd # skip covering cmd directory
+
+# Holds coverage thresholds percentages, values should be in range [0-100].
+threshold:
+  # (optional; default 0)
+  # Minimum coverage percentage required for individual files.
+  file: 20
+
+  # (optional; default 0)
+  # Minimum coverage percentage required for each package.
+  package: 20
+
+  # (optional; default 0)
+  # Minimum overall project coverage percentage required.
+  total: 20
