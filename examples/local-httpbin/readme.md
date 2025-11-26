@@ -26,30 +26,14 @@ make docker-install IMG=local/local-httpbin:dev KIND_CLUSTER=local-httpbin
 
 Install the CRDs and operator:
 
+Using Helm (from OCI registry):
 ```bash
+# Install using helm from GHCR
 helm --kube-context kind-local-httpbin upgrade --install \
-    example-httpbin-operator ./charts/example-httpbin-operator \
+    example-httpbin-operator oci://ghcr.io/platform-mesh/helm-charts/example-httpbin-operator \
     --set image.registry=local \
     --set image.repository=local-httpbin \
     --set image.tag=dev \
     --set operator.args={--local-ingress} \
     --wait
-```
-
-Wait for the operator to be ready:
-
-```bash
-kubectl wait --for=condition=Available deploy -l app.kubernetes.io/name=example-httpbin-operator
-```
-
-Create a HttpBin resource:
-
-```bash
-kubectl apply -f examples/local-httpbin/httpbin.yaml
-```
-
-Wait for the operator to fulfil the request:
-
-```bash
-kubectl wait --for=jsonpath='{.status.url}' httpbins/httpbin-test
 ```
