@@ -39,3 +39,5 @@ charts/**/*.tgz
 .helm-charts
 CLAUDE.md
 CLAUDE.local.md
+/convo
+coverage.html
