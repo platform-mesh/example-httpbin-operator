@@ -91,7 +91,8 @@ var _ = Describe("HttpBin Controller", func() {
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result.Requeue).To(BeTrue())
+			// Check that reconciliation requests a requeue
+			Expect(result).NotTo(Equal(reconcile.Result{}))
 
 			By("Verifying HttpBinDeployment was created")
 			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{}

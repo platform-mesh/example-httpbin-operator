@@ -1480,7 +1480,7 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 			}, updatedIngress)).To(Succeed())
 
 			// Should have only one rule now
-			Expect(len(updatedIngress.Spec.Rules)).To(Equal(1))
+			Expect(updatedIngress.Spec.Rules).To(HaveLen(1))
 			Expect(updatedIngress.Spec.Rules[0].Host).To(Equal("other.localhost"))
 
 			// DNS annotation should not contain the finalized host
