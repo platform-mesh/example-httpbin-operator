@@ -37,6 +37,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	gatewayApi "sigs.k8s.io/gateway-api/apis/v1"
 
 	orchestratev1alpha1 "http-operator/api/v1alpha1"
 	"http-operator/internal/controller"
@@ -52,6 +53,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(orchestratev1alpha1.AddToScheme(scheme))
+	utilruntime.Must(gatewayApi.Install(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 

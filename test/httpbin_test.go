@@ -44,7 +44,7 @@ func TestHttpBinOperator(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: orchestratev1alpha1.HttpBinSpec{
-					EnableHTTPS: true,
+					Region: "us-east-1",
 				},
 			}
 

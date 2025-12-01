@@ -45,15 +45,6 @@ const (
 
 // HttpBinSpec defines the desired state of HttpBin
 type HttpBinSpec struct {
-	// EnableHTTPS determines if HTTPS should be enabled
-	// If true, service port will be 8443
-	// If false or not set, service port will be 443
-	// +optional
-	// +kubebuilder:default=false
-	EnableHTTPS bool `json:"enableHTTPS,omitempty"`
-
-	// Foo is an example field of HttpBin. Edit httpbin_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
 	// Region can be used to filter which HttpBin should be served
 	Region string `json:"region,omitempty"`
 }
