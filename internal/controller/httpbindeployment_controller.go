@@ -10,12 +10,16 @@ import (
 	"time"
 
 	networkingv1 "k8s.io/api/networking/v1"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+
+	gatewayApi "sigs.k8s.io/gateway-api/apis/v1"
 
 	orchestratev1alpha1 "http-operator/api/v1alpha1"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -30,7 +34,7 @@ import (
 )
 
 const (
-	httpbinImage  = "nwallus308/httpbin:latest"
+	httpbinImage  = "ghcr.io/platform-mesh/custom-images/httpbin:dev"
 	pollInterval  = 60 * time.Second
 	finalizerName = "httpbindeployment.orchestrate.platform-mesh.io/finalizer"
 
@@ -41,11 +45,16 @@ const (
 )
 
 var (
-	fDomain           = flag.String("domain", "", "Domain for DNS, setting prevents domain generation from labels")
-	fBaseDomain       = flag.String("base-domain", "localhost", "Base domain for DNS names, not used if --domain is set")
-	fLocalIngress     = flag.Bool("local-ingress", false, "Manage local ingress")
-	fIngressClassName = flag.String("ingress-class-name", "", "Ingress class name to use for local ingress")
-	fTlsSecretName    = flag.String("tls-secret-name", "", "Name of the TLS secret to use for local ingress, if empty no TLS will be used")
+	fDomain                         = flag.String("domain", "", "Domain for DNS, setting prevents domain generation from labels")
+	fBaseDomain                     = flag.String("base-domain", "localhost", "Base domain for DNS names, not used if --domain is set")
+	fLocalIngress                   = flag.Bool("local-ingress", false, "Manage local ingress creation")
+	fLocalIngressUpdate             = flag.Bool("local-ingress-update", false, "Manage local ingress updates")
+	fLocalHttpRoute                 = flag.Bool("local-http-route", false, "Manage local http-route")
+	fLocalHttpRouteGatewayName      = flag.String("local-http-route-gateway-name", "", "Set the Gateway name to be used in the HTTPRoute")
+	fLocalHttpRouteGatewayNamespace = flag.String("local-http-route-gateway-namespace", "", "Set the Gateway namespace to be used in the HTTPRoute")
+	fLocalHttpRoutePort             = flag.Int("local-http-route-port", 0, "Set the port to be used in the HTTPRoute URL (e.g., 443, 8443). If 0, port is omitted from URL")
+	fIngressClassName               = flag.String("ingress-class-name", "", "Ingress class name to use for local ingress")
+	fTlsSecretName                  = flag.String("tls-secret-name", "", "Name of the TLS secret to use for local ingress, if empty no TLS will be used")
 )
 
 type HttpBinDeploymentReconciler struct {
@@ -87,6 +96,21 @@ func (r *HttpBinDeploymentReconciler) getDNSName(m *orchestratev1alpha1.HttpBinD
 
 	// Fallback to using the HttpBinDeployment with base domain
 	return fmt.Sprintf("%s.%s", m.Name, *fBaseDomain)
+}
+
+func (r *HttpBinDeploymentReconciler) getPath(m *orchestratev1alpha1.HttpBinDeployment) string {
+	// api-syncagent labels
+	if m.Labels["syncagent.kcp.io/remote-object-name"] != "" &&
+		m.Labels["syncagent.kcp.io/remote-object-namespace"] != "" &&
+		m.Labels["syncagent.kcp.io/remote-object-cluster"] != "" {
+		return fmt.Sprintf("%s-%s-%s",
+			m.Labels["syncagent.kcp.io/remote-object-name"],
+			m.Labels["syncagent.kcp.io/remote-object-namespace"],
+			m.Labels["syncagent.kcp.io/remote-object-cluster"])
+	}
+
+	// Fallback to using the HttpBinDeployment with base domain
+	return fmt.Sprintf("%s", m.Name)
 }
 
 func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) { //nolint:gocyclo
@@ -237,32 +261,71 @@ func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		}
 		ingress = desiredIngress
 	} else {
-		err = r.LocalClient.Get(ctx, types.NamespacedName{Name: "msp", Namespace: "default"}, ingress)
-		if err != nil {
-			if errors.IsNotFound(err) {
-				logger.Info("skipping ingress update, ingress does not exists")
-			} else {
-				logger.Error(err, "Failed to get Ingress")
-				return ctrl.Result{}, err
-			}
-		} else {
-			dnsName := r.getDNSName(httpBinDeployment)
-			updatedAnnotation := updateDnsAnnotation(dnsName, ingress)
-			// Get the actual service name from the created service
-			updatedRules := updateIngressRules(dnsName, service.Name, ingress)
-
-			if updatedRules || updatedAnnotation {
-				logger.Info("Updating Ingress", "Ingress.Namespace", ingress.Namespace, "Ingress.Name", ingress.Name)
-				err = r.LocalClient.Update(ctx, ingress)
-				if err != nil {
-					logger.Error(err, "Failed to update Ingress")
-					setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionFalse, orchestratev1alpha1.HttpBinDeploymentConditionTypeServiceExposed, orchestratev1alpha1.HttpBinDeploymentConditionReasonHttpBinServiceExposureFailed, "Failed to update Ingress: "+err.Error())
-					_ = r.RemoteClient.Status().Update(ctx, httpBinDeployment)
+		if *fLocalIngressUpdate {
+			err = r.LocalClient.Get(ctx, types.NamespacedName{Name: "msp", Namespace: "default"}, ingress)
+			if err != nil {
+				if errors.IsNotFound(err) {
+					logger.Info("skipping ingress update, ingress does not exists")
+				} else {
+					logger.Error(err, "Failed to get Ingress")
 					return ctrl.Result{}, err
 				}
+			} else {
+				dnsName := r.getDNSName(httpBinDeployment)
+				updatedAnnotation := updateDnsAnnotation(dnsName, ingress)
+				// Get the actual service name from the created service
+				updatedRules := updateIngressRules(dnsName, service.Name, ingress)
+
+				if updatedRules || updatedAnnotation {
+					logger.Info("Updating Ingress", "Ingress.Namespace", ingress.Namespace, "Ingress.Name", ingress.Name)
+					err = r.LocalClient.Update(ctx, ingress)
+					if err != nil {
+						logger.Error(err, "Failed to update Ingress")
+						setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionFalse, orchestratev1alpha1.HttpBinDeploymentConditionTypeServiceExposed, orchestratev1alpha1.HttpBinDeploymentConditionReasonHttpBinServiceExposureFailed, "Failed to update Ingress: "+err.Error())
+						_ = r.RemoteClient.Status().Update(ctx, httpBinDeployment)
+						return ctrl.Result{}, err
+					}
+				}
+				setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionTrue, orchestratev1alpha1.HttpBinDeploymentConditionTypeServiceExposed, orchestratev1alpha1.HttpBinDeploymentConditionReasonReady, "HttpBin service is exposed")
 			}
-			setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionTrue, orchestratev1alpha1.HttpBinDeploymentConditionTypeServiceExposed, orchestratev1alpha1.HttpBinDeploymentConditionReasonReady, "HttpBin service is exposed")
 		}
+	}
+
+	httpRoute := &gatewayApi.HTTPRoute{}
+	if *fLocalHttpRoute {
+		err = r.LocalClient.Get(ctx, types.NamespacedName{
+			Name:      svc.Name,
+			Namespace: "default",
+		}, httpRoute)
+
+		if err != nil && errors.IsNotFound(err) {
+			desiredHttpRoute := r.httpRouteForHttpBin(httpBinDeployment, svc)
+			logger.Info("Creating a new HTTPRoute", "HTTPRoute.Namespace", desiredHttpRoute.Namespace, "HTTPRoute.Name", desiredHttpRoute.Name)
+			err = r.LocalClient.Create(ctx, desiredHttpRoute)
+			if err != nil {
+				logger.Error(err, "Failed to create new HTTPRoute")
+				setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionFalse, orchestratev1alpha1.HttpBinDeploymentConditionTypeServiceExposed, orchestratev1alpha1.HttpBinDeploymentConditionReasonHttpBinServiceExposureFailed, "Failed to create HTTPRoute: "+err.Error())
+				_ = r.RemoteClient.Status().Update(ctx, httpBinDeployment)
+				return ctrl.Result{}, err
+			}
+			httpRoute = desiredHttpRoute
+		} else if err != nil {
+			logger.Error(err, "Failed to get HTTPRoute")
+			return ctrl.Result{}, err
+		} else if r.httpRouteNeedsUpdate(httpBinDeployment, httpRoute, svc) {
+			desiredHttpRoute := r.httpRouteForHttpBin(httpBinDeployment, svc)
+			desiredHttpRoute.ResourceVersion = httpRoute.ResourceVersion
+
+			logger.Info("Updating HTTPRoute", "HTTPRoute.Namespace", desiredHttpRoute.Namespace, "HTTPRoute.Name", desiredHttpRoute.Name)
+			if err := r.LocalClient.Update(ctx, desiredHttpRoute); err != nil {
+				logger.Error(err, "Failed to update HTTPRoute")
+				setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionFalse, orchestratev1alpha1.HttpBinDeploymentConditionTypeServiceExposed, orchestratev1alpha1.HttpBinDeploymentConditionReasonHttpBinServiceExposureFailed, "Failed to update HTTPRoute: "+err.Error())
+				_ = r.RemoteClient.Status().Update(ctx, httpBinDeployment)
+				return ctrl.Result{}, err
+			}
+			httpRoute = desiredHttpRoute
+		}
+		setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionTrue, orchestratev1alpha1.HttpBinDeploymentConditionTypeServiceExposed, orchestratev1alpha1.HttpBinDeploymentConditionReasonReady, "HttpBin service is exposed")
 	}
 
 	// Update status in remote cluster
@@ -274,8 +337,35 @@ func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	if *fDeploymentServiceType == "NodePort" && *fDomain != "" {
 		url.Host = fmt.Sprintf("%s:%d", *fDomain, service.Spec.Ports[0].NodePort)
 		url.Path = httpBinDeployment.Name
+	} else if *fLocalHttpRoute {
+		// Build URL from HTTPRoute
+		if len(httpRoute.Spec.Hostnames) == 0 {
+			logger.Info("No HTTPRoute hostnames found, skipping URL update")
+			return ctrl.Result{}, nil
+		}
+
+		url.Scheme = "https"
+		hostname := string(httpRoute.Spec.Hostnames[0])
+
+		// Add port if specified
+		if *fLocalHttpRoutePort > 0 {
+			url.Host = fmt.Sprintf("%s:%d", hostname, *fLocalHttpRoutePort)
+		} else {
+			url.Host = hostname
+		}
+
+		if len(httpRoute.Spec.Rules) == 0 || len(httpRoute.Spec.Rules[0].Matches) == 0 {
+			logger.Info("No HTTPRoute rules/matches found, skipping URL update")
+			return ctrl.Result{}, nil
+		}
+
+		if httpRoute.Spec.Rules[0].Matches[0].Path != nil && httpRoute.Spec.Rules[0].Matches[0].Path.Value != nil {
+			url.Path = *httpRoute.Spec.Rules[0].Matches[0].Path.Value
+		} else {
+			url.Path = "/"
+		}
 	} else {
-		// Anything else can build from the ingress
+		// Build URL from Ingress
 		if len(ingress.Spec.Rules) == 0 {
 			logger.Info("No ingress rules found, skipping URL update")
 			return ctrl.Result{}, nil
@@ -456,6 +546,8 @@ func (r *HttpBinDeploymentReconciler) deploymentNeedsUpdate(httpBinDeployment *o
 
 	return !reflect.DeepEqual(deployment.Spec.Template.Spec.Containers[0].Resources, desiredDep.Spec.Template.Spec.Containers[0].Resources) ||
 		*deployment.Spec.Replicas != *desiredDep.Spec.Replicas ||
+		deployment.Spec.Template.Spec.Containers[0].Image != desiredDep.Spec.Template.Spec.Containers[0].Image ||
+		!reflect.DeepEqual(deployment.Spec.Template.Spec.Containers[0].Env, desiredDep.Spec.Template.Spec.Containers[0].Env) ||
 		!reflect.DeepEqual(deployment.Spec.Template.Labels, desiredDep.Spec.Template.Labels) ||
 		!reflect.DeepEqual(deployment.Spec.Template.Annotations, desiredDep.Spec.Template.Annotations)
 }
@@ -468,6 +560,16 @@ func (r *HttpBinDeploymentReconciler) serviceNeedsUpdate(httpBinDeployment *orch
 		!reflect.DeepEqual(service.Spec.Ports, desiredSvc.Spec.Ports) ||
 		!reflect.DeepEqual(service.Spec.Selector, desiredSvc.Spec.Selector) ||
 		!reflect.DeepEqual(service.Annotations, desiredSvc.Annotations)
+}
+
+// httpRouteNeedsUpdate checks if the HTTPRoute needs to be updated
+func (r *HttpBinDeploymentReconciler) httpRouteNeedsUpdate(httpBinDeployment *orchestratev1alpha1.HttpBinDeployment, httpRoute *gatewayApi.HTTPRoute, svc *corev1.Service) bool {
+	desiredHttpRoute := r.httpRouteForHttpBin(httpBinDeployment, svc)
+
+	return !equality.Semantic.DeepEqual(httpRoute.Spec.Hostnames, desiredHttpRoute.Spec.Hostnames) ||
+		!equality.Semantic.DeepEqual(httpRoute.Spec.Rules, desiredHttpRoute.Spec.Rules) ||
+		!equality.Semantic.DeepEqual(httpRoute.Spec.ParentRefs, desiredHttpRoute.Spec.ParentRefs) ||
+		!equality.Semantic.DeepEqual(httpRoute.Labels, desiredHttpRoute.Labels)
 }
 
 // deploymentForHttpBin returns a httpbin Deployment object
@@ -545,6 +647,14 @@ func (r *HttpBinDeploymentReconciler) deploymentForHttpBin(m *orchestratev1alpha
 		},
 	}
 
+	if fLocalHttpRouteGatewayName != nil && *fLocalHttpRouteGatewayName != "" {
+		if dep.Spec.Template.Spec.Containers[0].Env == nil {
+			dep.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{}
+		}
+		dep.Spec.Template.Spec.Containers[0].Env = append(dep.Spec.Template.Spec.Containers[0].Env,
+			corev1.EnvVar{Name: "HTTPBIN_PREFIX", Value: fmt.Sprintf("/%s", r.getPath(m))})
+	}
+
 	// Removed SetControllerReference to prevent cross-cluster owner reference
 	return dep
 }
@@ -614,6 +724,89 @@ func (r *HttpBinDeploymentReconciler) serviceForHttpBin(m *orchestratev1alpha1.H
 	return svc
 }
 
+func (r *HttpBinDeploymentReconciler) httpRouteForHttpBin(m *orchestratev1alpha1.HttpBinDeployment, svc *corev1.Service) *gatewayApi.HTTPRoute {
+	selectorLabels := map[string]string{
+		labelApp:       "httpbin",
+		labelHttpbinCr: m.Name,
+	}
+
+	serviceLabels := make(map[string]string)
+	for k, v := range selectorLabels {
+		serviceLabels[k] = v
+	}
+	for k, v := range m.Labels {
+		if k != labelApp && k != labelHttpbinCr {
+			serviceLabels[k] = v
+		}
+	}
+	if m.Spec.Deployment.Labels != nil {
+		for k, v := range m.Spec.Deployment.Labels {
+			if k != labelApp && k != labelHttpbinCr {
+				serviceLabels[k] = v
+			}
+		}
+	}
+
+	pathMatchPrefix := gatewayApi.PathMatchPathPrefix
+	path := "/"
+	if *fDomain != "" {
+		path = fmt.Sprintf("/%s", r.getPath(m))
+	}
+
+	hostname := gatewayApi.Hostname(r.getDNSName(m))
+	port := gatewayApi.PortNumber(svc.Spec.Ports[0].Port)
+
+	rule := gatewayApi.HTTPRouteRule{
+		Matches: []gatewayApi.HTTPRouteMatch{
+			{
+				Path: &gatewayApi.HTTPPathMatch{
+					Type:  &pathMatchPrefix,
+					Value: &path,
+				},
+			},
+		},
+		BackendRefs: []gatewayApi.HTTPBackendRef{
+			{
+				BackendRef: gatewayApi.BackendRef{
+					BackendObjectReference: gatewayApi.BackendObjectReference{
+						Group: ptr.To(gatewayApi.Group("")),
+						Kind:  ptr.To(gatewayApi.Kind("Service")),
+						Name:  gatewayApi.ObjectName(svc.Name),
+						Port:  &port,
+					},
+					Weight: ptr.To(int32(1)),
+				},
+			},
+		},
+	}
+
+	httpRoute := &gatewayApi.HTTPRoute{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      r.getResourceName(m),
+			Namespace: svc.Namespace,
+			Labels:    serviceLabels,
+		},
+		Spec: gatewayApi.HTTPRouteSpec{
+			Hostnames: []gatewayApi.Hostname{hostname},
+			Rules:     []gatewayApi.HTTPRouteRule{rule},
+		},
+	}
+
+	if fLocalHttpRouteGatewayName != nil && *fLocalHttpRouteGatewayName != "" {
+		httpRoute.Spec.ParentRefs = []gatewayApi.ParentReference{
+			{
+				Group:       ptr.To(gatewayApi.Group("gateway.networking.k8s.io")),
+				Kind:        ptr.To(gatewayApi.Kind("Gateway")),
+				SectionName: ptr.To(gatewayApi.SectionName("websecure")),
+				Name:        gatewayApi.ObjectName(*fLocalHttpRouteGatewayName),
+				Namespace:   ptr.To(gatewayApi.Namespace(*fLocalHttpRouteGatewayNamespace)),
+			},
+		}
+	}
+
+	return httpRoute
+}
+
 // ingressForHttpBin returns an Ingress object
 func (r *HttpBinDeploymentReconciler) ingressForHttpBin(m *orchestratev1alpha1.HttpBinDeployment, svc *corev1.Service) *networkingv1.Ingress {
 	// Create minimal, static selector labels - these must never change
@@ -649,15 +842,16 @@ func (r *HttpBinDeploymentReconciler) ingressForHttpBin(m *orchestratev1alpha1.H
 		"dns.gardener.cloud/class":    "garden",
 	}
 
-	// By default assume that HttpBin lives at a subdomain. If domain is
-	// set HttpBins do not get a separate subdomain so the name is part
-	// of the URI.
 	path := "/"
 	pathType := networkingv1.PathTypePrefix
-	if *fBaseDomain == "" {
-		path = fmt.Sprintf("/%s/(.*)", m.Name)
-		pathType = networkingv1.PathTypeImplementationSpecific
-		annotations["nginx.ingress.kubernetes.io/rewrite-target"] = "/$1"
+	if *fDomain != "" {
+		path = fmt.Sprintf("/%s", r.getPath(m))
+	} else {
+		if *fBaseDomain == "" {
+			path = fmt.Sprintf("/%s/(.*)", m.Name)
+			pathType = networkingv1.PathTypeImplementationSpecific
+			annotations["nginx.ingress.kubernetes.io/rewrite-target"] = "/$1"
+		}
 	}
 
 	ingress := &networkingv1.Ingress{

@@ -19,6 +19,7 @@ require (
 	k8s.io/client-go v0.34.2
 	sigs.k8s.io/controller-runtime v0.22.1
 	sigs.k8s.io/e2e-framework v0.6.0
+	sigs.k8s.io/gateway-api v1.4.0
 )
 
 require (
@@ -314,7 +315,7 @@ require (
 	k8s.io/apiserver v0.34.1 // indirect
 	k8s.io/code-generator v0.34.1 // indirect
 	k8s.io/component-base v0.34.1 // indirect
-	k8s.io/gengo/v2 v2.0.0-20250604051438-85fd79dbfd9f // indirect
+	k8s.io/gengo/v2 v2.0.0-20250820003526-c297c0c1eb9d // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20250910181357-589584f1c912 // indirect
 	k8s.io/utils v0.0.0-20250820121507-0af2bda4dd1d // indirect

@@ -100,12 +100,7 @@ func (r *HttpBinReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		Spec: orchestratev1alpha1.HttpBinDeploymentSpec{
 			Service: orchestratev1alpha1.ServiceConfig{
 				Type: *fDeploymentServiceType,
-				Port: func() int32 {
-					if httpBin.Spec.EnableHTTPS {
-						return 8443
-					}
-					return 443
-				}(),
+				Port: 80,
 			},
 			Deployment: orchestratev1alpha1.DeploymentConfig{
 				Labels: map[string]string{
