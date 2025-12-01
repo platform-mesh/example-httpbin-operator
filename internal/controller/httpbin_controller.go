@@ -91,6 +91,7 @@ func (r *HttpBinReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		"HttpBin.Spec", httpBin.Spec)
 
 	// Define a new HttpBinDeployment object
+	// Service port is always 80 for backend pods, SSL is terminated at ingress/httproute level
 	httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      httpBin.Name,

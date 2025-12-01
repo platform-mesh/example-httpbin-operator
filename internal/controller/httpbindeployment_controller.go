@@ -110,7 +110,7 @@ func (r *HttpBinDeploymentReconciler) getPath(m *orchestratev1alpha1.HttpBinDepl
 	}
 
 	// Fallback to using the HttpBinDeployment with base domain
-	return fmt.Sprintf("%s", m.Name)
+	return m.Name
 }
 
 func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) { //nolint:gocyclo
@@ -754,7 +754,7 @@ func (r *HttpBinDeploymentReconciler) httpRouteForHttpBin(m *orchestratev1alpha1
 	}
 
 	hostname := gatewayApi.Hostname(r.getDNSName(m))
-	port := gatewayApi.PortNumber(svc.Spec.Ports[0].Port)
+	port := svc.Spec.Ports[0].Port
 
 	rule := gatewayApi.HTTPRouteRule{
 		Matches: []gatewayApi.HTTPRouteMatch{

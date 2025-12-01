@@ -57,8 +57,7 @@ var _ = Describe("HttpBin Controller", func() {
 						Namespace: "default",
 					},
 					Spec: orchestratev1alpha1.HttpBinSpec{
-						EnableHTTPS: false,
-						Region:      "us-east-1",
+						Region: "us-east-1",
 					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
@@ -100,11 +99,11 @@ var _ = Describe("HttpBin Controller", func() {
 				return k8sClient.Get(ctx, typeNamespacedName, httpBinDeployment)
 			}, timeout, interval).Should(Succeed())
 
-			Expect(httpBinDeployment.Spec.Service.Port).To(Equal(int32(443)))
+			Expect(httpBinDeployment.Spec.Service.Port).To(Equal(int32(80)))
 		})
 
-		It("should set correct port when EnableHTTPS is true", func() {
-			By("Creating HttpBin with EnableHTTPS=true")
+		It("should always use backend port 80 for service", func() {
+			By("Creating HttpBin resource")
 			httpsResourceName := "test-httpbin-https"
 			httpsNamespacedName := types.NamespacedName{
 				Name:      httpsResourceName,
@@ -117,7 +116,7 @@ var _ = Describe("HttpBin Controller", func() {
 					Namespace: "default",
 				},
 				Spec: orchestratev1alpha1.HttpBinSpec{
-					EnableHTTPS: true,
+					Region: "us-west-1",
 				},
 			}
 			Expect(k8sClient.Create(ctx, resource)).To(Succeed())
@@ -141,13 +140,13 @@ var _ = Describe("HttpBin Controller", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			By("Verifying HttpBinDeployment has HTTPS port")
+			By("Verifying HttpBinDeployment service port is 80 (SSL terminated at ingress/httproute)")
 			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, httpsNamespacedName, httpBinDeployment)
 			}, timeout, interval).Should(Succeed())
 
-			Expect(httpBinDeployment.Spec.Service.Port).To(Equal(int32(8443)))
+			Expect(httpBinDeployment.Spec.Service.Port).To(Equal(int32(80)))
 		})
 
 		It("should handle not found resource gracefully", func() {
