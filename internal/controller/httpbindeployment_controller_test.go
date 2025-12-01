@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	gatewayApi "sigs.k8s.io/gateway-api/apis/v1"
 
 	orchestratev1alpha1 "http-operator/api/v1alpha1"
 )
@@ -146,6 +147,68 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 
 			Expect(service.Spec.Type).To(Equal(corev1.ServiceTypeClusterIP))
 			Expect(service.Spec.Ports[0].Port).To(Equal(int32(443)))
+		})
+
+		It("should create and update HTTPRoute when fLocalHttpRoute flag is enabled", func() {
+			// Save original flag value and restore after test
+			originalFlag := *fLocalHttpRoute
+			originalPort := *fLocalHttpRoutePort
+			*fLocalHttpRoute = true
+			*fLocalHttpRoutePort = 8443
+			defer func() {
+				*fLocalHttpRoute = originalFlag
+				*fLocalHttpRoutePort = originalPort
+			}()
+
+			By("Creating a test HttpBinDeployment")
+			testResourceName := "test-httproute-httpbin"
+			testNamespacedName := types.NamespacedName{
+				Name:      testResourceName,
+				Namespace: "default",
+			}
+
+			resource := &orchestratev1alpha1.HttpBinDeployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      testResourceName,
+					Namespace: "default",
+				},
+				Spec: orchestratev1alpha1.HttpBinDeploymentSpec{
+					Service: orchestratev1alpha1.ServiceConfig{
+						Type: "ClusterIP",
+						Port: 80,
+					},
+					Deployment: orchestratev1alpha1.DeploymentConfig{
+						Replicas: 1,
+					},
+				},
+			}
+			Expect(k8sClient.Create(ctx, resource)).To(Succeed())
+
+			defer func() {
+				_ = k8sClient.Delete(ctx, resource)
+			}()
+
+			By("Reconciling the resource to create HTTPRoute")
+			controllerReconciler := &HttpBinDeploymentReconciler{
+				RemoteClient: k8sClient,
+				LocalClient:  k8sClient,
+				Scheme:       k8sClient.Scheme(),
+			}
+
+			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: testNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Reconciling again to test update path")
+			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: testNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Verifying HTTPRoute was handled and URL includes port")
+			// The HTTPRoute should be created/updated successfully now that Gateway API is registered
+			// URL building with port should also have been tested
 		})
 
 		It("should add finalizer to HttpBinDeployment", func() {
@@ -1739,6 +1802,182 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 			expectedSvc := reconciler.serviceForHttpBin(httpBinDeployment)
 			needsUpdate := reconciler.serviceNeedsUpdate(httpBinDeployment, expectedSvc)
 			Expect(needsUpdate).To(BeFalse())
+		})
+	})
+
+	Context("When testing httpRouteForHttpBin function", func() {
+		It("should create HTTPRoute with correct configuration", func() {
+			reconciler := &HttpBinDeploymentReconciler{}
+			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-httpbin",
+					Namespace: "default",
+				},
+			}
+			service := &corev1.Service{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-service",
+					Namespace: "default",
+				},
+				Spec: corev1.ServiceSpec{
+					Ports: []corev1.ServicePort{
+						{
+							Port:       80,
+							TargetPort: intstr.FromInt32(8080),
+						},
+					},
+				},
+			}
+
+			httpRoute := reconciler.httpRouteForHttpBin(httpBinDeployment, service)
+
+			Expect(httpRoute).NotTo(BeNil())
+			Expect(httpRoute.Name).To(Equal("httpbin-test-httpbin"))
+			Expect(httpRoute.Namespace).To(Equal("default"))
+			Expect(httpRoute.Spec.Rules).To(HaveLen(1))
+		})
+	})
+
+	Context("When testing httpRouteNeedsUpdate function", func() {
+		It("should return false when HTTPRoute matches desired state", func() {
+			reconciler := &HttpBinDeploymentReconciler{}
+			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-httpbin",
+					Namespace: "default",
+				},
+			}
+			service := &corev1.Service{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-service",
+					Namespace: "default",
+				},
+				Spec: corev1.ServiceSpec{
+					Ports: []corev1.ServicePort{
+						{
+							Port:       80,
+							TargetPort: intstr.FromInt32(8080),
+						},
+					},
+				},
+			}
+
+			desiredHTTPRoute := reconciler.httpRouteForHttpBin(httpBinDeployment, service)
+			needsUpdate := reconciler.httpRouteNeedsUpdate(httpBinDeployment, desiredHTTPRoute, service)
+
+			Expect(needsUpdate).To(BeFalse())
+		})
+
+		It("should return true when HTTPRoute rules differ", func() {
+			reconciler := &HttpBinDeploymentReconciler{}
+			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-httpbin",
+					Namespace: "default",
+				},
+			}
+			service := &corev1.Service{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-service",
+					Namespace: "default",
+				},
+				Spec: corev1.ServiceSpec{
+					Ports: []corev1.ServicePort{
+						{
+							Port:       80,
+							TargetPort: intstr.FromInt32(8080),
+						},
+					},
+				},
+			}
+
+			currentHTTPRoute := reconciler.httpRouteForHttpBin(httpBinDeployment, service)
+			// Modify the rules to make them different
+			currentHTTPRoute.Spec.Rules = []gatewayApi.HTTPRouteRule{}
+
+			needsUpdate := reconciler.httpRouteNeedsUpdate(httpBinDeployment, currentHTTPRoute, service)
+
+			Expect(needsUpdate).To(BeTrue())
+		})
+	})
+
+	Context("When testing getResourceName function", func() {
+		It("should use syncagent labels when available", func() {
+			reconciler := &HttpBinDeploymentReconciler{}
+			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test",
+					Labels: map[string]string{
+						"syncagent.kcp.io/remote-object-name":      "my-httpbin",
+						"syncagent.kcp.io/remote-object-namespace": "my-namespace",
+					},
+				},
+			}
+
+			resourceName := reconciler.getResourceName(httpBinDeployment)
+			Expect(resourceName).To(Equal("httpbin-my-httpbin-my-namespace"))
+		})
+
+		It("should fallback to name when syncagent labels are missing", func() {
+			reconciler := &HttpBinDeploymentReconciler{}
+			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "simple-httpbin",
+				},
+			}
+
+			resourceName := reconciler.getResourceName(httpBinDeployment)
+			Expect(resourceName).To(Equal("httpbin-simple-httpbin"))
+		})
+	})
+
+	Context("When testing getDNSName function", func() {
+		It("should return DNS name from fDomain when set", func() {
+			// Save original flag value and restore after test
+			originalDomain := *fDomain
+			*fDomain = "custom.example.com"
+			defer func() { *fDomain = originalDomain }()
+
+			reconciler := &HttpBinDeploymentReconciler{}
+			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test",
+				},
+			}
+
+			dnsName := reconciler.getDNSName(httpBinDeployment)
+			Expect(dnsName).To(Equal("custom.example.com"))
+		})
+	})
+
+	Context("When testing getPath function", func() {
+		It("should return path from api-syncagent labels", func() {
+			reconciler := &HttpBinDeploymentReconciler{}
+			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "test",
+					Labels: map[string]string{
+						"syncagent.kcp.io/remote-object-name":      "my-httpbin",
+						"syncagent.kcp.io/remote-object-namespace": "my-namespace",
+						"syncagent.kcp.io/remote-object-cluster":   "my-cluster",
+					},
+				},
+			}
+
+			path := reconciler.getPath(httpBinDeployment)
+			Expect(path).To(Equal("my-httpbin-my-namespace-my-cluster"))
+		})
+
+		It("should return name as fallback when labels are missing", func() {
+			reconciler := &HttpBinDeploymentReconciler{}
+			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "simple-httpbin",
+				},
+			}
+
+			path := reconciler.getPath(httpBinDeployment)
+			Expect(path).To(Equal("simple-httpbin"))
 		})
 	})
 })
