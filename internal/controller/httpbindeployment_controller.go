@@ -797,7 +797,7 @@ func (r *HttpBinDeploymentReconciler) httpRouteForHttpBin(m *orchestratev1alpha1
 			{
 				Group:       ptr.To(gatewayApi.Group("gateway.networking.k8s.io")),
 				Kind:        ptr.To(gatewayApi.Kind("Gateway")),
-				SectionName: ptr.To(gatewayApi.SectionName("websecure")),
+				SectionName: ptr.To(gatewayApi.SectionName("websecure-wildcard-portal-localhost")),
 				Name:        gatewayApi.ObjectName(*fLocalHttpRouteGatewayName),
 				Namespace:   ptr.To(gatewayApi.Namespace(*fLocalHttpRouteGatewayNamespace)),
 			},
