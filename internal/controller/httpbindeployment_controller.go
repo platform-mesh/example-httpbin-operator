@@ -795,11 +795,10 @@ func (r *HttpBinDeploymentReconciler) httpRouteForHttpBin(m *orchestratev1alpha1
 	if fLocalHttpRouteGatewayName != nil && *fLocalHttpRouteGatewayName != "" {
 		httpRoute.Spec.ParentRefs = []gatewayApi.ParentReference{
 			{
-				Group:       ptr.To(gatewayApi.Group("gateway.networking.k8s.io")),
-				Kind:        ptr.To(gatewayApi.Kind("Gateway")),
-				SectionName: ptr.To(gatewayApi.SectionName("websecure-wildcard-portal-localhost")),
-				Name:        gatewayApi.ObjectName(*fLocalHttpRouteGatewayName),
-				Namespace:   ptr.To(gatewayApi.Namespace(*fLocalHttpRouteGatewayNamespace)),
+				Group:     ptr.To(gatewayApi.Group("gateway.networking.k8s.io")),
+				Kind:      ptr.To(gatewayApi.Kind("Gateway")),
+				Name:      gatewayApi.ObjectName(*fLocalHttpRouteGatewayName),
+				Namespace: ptr.To(gatewayApi.Namespace(*fLocalHttpRouteGatewayNamespace)),
 			},
 		}
 	}
