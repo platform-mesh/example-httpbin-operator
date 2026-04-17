@@ -91,6 +91,13 @@ lint: ## Run golangci-lint linter
 lint-fix: ## Run golangci-lint linter and perform fixes
 	$(GOLANGCI_LINT) run --fix
 
+FUZZTIME ?= 30s
+
+.PHONY: fuzz
+fuzz: ## Run fuzz tests with a configurable duration (default 30s per target)
+	$(GO) test ./api/v1alpha1/ -run=^$$ -fuzz=FuzzHttpBinRoundTrip -fuzztime=$(FUZZTIME) -count=1
+	$(GO) test ./api/v1alpha1/ -run=^$$ -fuzz=FuzzHttpBinDeploymentRoundTrip -fuzztime=$(FUZZTIME) -count=1
+
 ##@ Build
 
 .PHONY: build
