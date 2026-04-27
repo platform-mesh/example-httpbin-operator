@@ -23,12 +23,12 @@ concurrency:
 
 jobs:
   lint:
-    uses: platform-mesh/.github/.github/workflows/job-golang-lint.yml@main
+    uses: platform-mesh/.github/.github/workflows/job-golang-lint.yml@61dc1c03878010e89f9f8863c765d672acdd2894 # main
     with:
       useMake: true
 
   test:
-    uses: platform-mesh/.github/.github/workflows/job-golang-test-source.yml@main
+    uses: platform-mesh/.github/.github/workflows/job-golang-test-source.yml@61dc1c03878010e89f9f8863c765d672acdd2894 # main
     secrets: inherit
     with:
       useMake: true
@@ -36,7 +36,7 @@ jobs:
 
   docker-build:
     if: github.event_name == 'pull_request'
-    uses: platform-mesh/.github/.github/workflows/job-docker-build-push.yml@main
+    uses: platform-mesh/.github/.github/workflows/job-docker-build-push.yml@61dc1c03878010e89f9f8863c765d672acdd2894 # main
     with:
       imageTagName: ghcr.io/platform-mesh/example-httpbin-operator
     secrets: inherit
@@ -66,13 +66,13 @@ jobs:
 
   create-version:
     if: github.ref == 'refs/heads/main'
-    uses: platform-mesh/.github/.github/workflows/job-create-version.yml@main
+    uses: platform-mesh/.github/.github/workflows/job-create-version.yml@61dc1c03878010e89f9f8863c765d672acdd2894 # main
     secrets: inherit
 
   docker-build-push:
     if: github.ref == 'refs/heads/main'
     needs: [create-version, lint, test]
-    uses: platform-mesh/.github/.github/workflows/job-docker-build-push.yml@main
+    uses: platform-mesh/.github/.github/workflows/job-docker-build-push.yml@61dc1c03878010e89f9f8863c765d672acdd2894 # main
     with:
       imageTagName: ghcr.io/platform-mesh/example-httpbin-operator
       version: ${{ needs.create-version.outputs.version }}
@@ -82,7 +82,7 @@ jobs:
   update-version:
     if: github.ref == 'refs/heads/main'
     needs: [create-version, docker-build-push]
-    uses: platform-mesh/.github/.github/workflows/job-chart-version-update.yml@main
+    uses: platform-mesh/.github/.github/workflows/job-chart-version-update.yml@61dc1c03878010e89f9f8863c765d672acdd2894 # main
     secrets: inherit
     with:
       appVersion: ${{ needs.create-version.outputs.version }}
@@ -92,14 +92,14 @@ jobs:
   sbom:
     if: github.ref == 'refs/heads/main'
     needs: [create-version, docker-build-push]
-    uses: platform-mesh/.github/.github/workflows/job-sbom.yml@main
+    uses: platform-mesh/.github/.github/workflows/job-sbom.yml@61dc1c03878010e89f9f8863c765d672acdd2894 # main
     with:
       imageReference: ghcr.io/platform-mesh/example-httpbin-operator:${{ needs.create-version.outputs.version }}
 
   image-ocm:
     if: github.ref == 'refs/heads/main'
     needs: [create-version, docker-build-push, sbom]
-    uses: platform-mesh/.github/.github/workflows/job-image-ocm.yml@main
+    uses: platform-mesh/.github/.github/workflows/job-image-ocm.yml@61dc1c03878010e89f9f8863c765d672acdd2894 # main
     secrets: inherit
     with:
       imageReference: ghcr.io/platform-mesh/example-httpbin-operator:${{ needs.create-version.outputs.version }}
