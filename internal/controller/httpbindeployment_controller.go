@@ -16,6 +16,7 @@ import (
 	gatewayApi "sigs.k8s.io/gateway-api/apis/v1"
 
 	orchestratev1alpha1 "http-operator/api/v1alpha1"
+	"http-operator/internal/metrics"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -176,6 +177,7 @@ func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			_ = r.RemoteClient.Status().Update(ctx, httpBinDeployment)
 			return ctrl.Result{}, err
 		}
+		metrics.DeploymentOperations.WithLabelValues("created").Inc()
 	} else if err != nil {
 		logger.Error(err, "Failed to get Deployment")
 		return ctrl.Result{}, err
@@ -191,6 +193,7 @@ func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			_ = r.RemoteClient.Status().Update(ctx, httpBinDeployment)
 			return ctrl.Result{}, err
 		}
+		metrics.DeploymentOperations.WithLabelValues("updated").Inc()
 	}
 
 	// Handle Service in local cluster (Cluster A)
@@ -212,6 +215,7 @@ func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			_ = r.RemoteClient.Status().Update(ctx, httpBinDeployment)
 			return ctrl.Result{}, err
 		}
+		metrics.ServiceOperations.WithLabelValues("created").Inc()
 	} else if err != nil {
 		logger.Error(err, "Failed to get Service")
 		return ctrl.Result{}, err
@@ -228,6 +232,7 @@ func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			_ = r.RemoteClient.Status().Update(ctx, httpBinDeployment)
 			return ctrl.Result{}, err
 		}
+		metrics.ServiceOperations.WithLabelValues("updated").Inc()
 	}
 
 	ingress := &networkingv1.Ingress{}
@@ -400,9 +405,12 @@ func (r *HttpBinDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		statusNeedsUpdate = true
 		if httpBinDeployment.Status.IsDeploymentReady {
 			setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionTrue, orchestratev1alpha1.HttpBinDeploymentConditionTypeReady, orchestratev1alpha1.HttpBinDeploymentConditionReasonReady, "HttpBinDeployment instance is ready")
+			metrics.DeploymentReady.WithLabelValues(httpBinDeployment.Name).Set(1)
 		} else {
 			setHttpBinDeploymentStatusCondition(httpBinDeployment, metav1.ConditionFalse, orchestratev1alpha1.HttpBinDeploymentConditionTypeReady, orchestratev1alpha1.HttpBinDeploymentConditionReasonHttpBinInstanceProgressing, "HttpBinDeployment instance is not yet available")
+			metrics.DeploymentReady.WithLabelValues(httpBinDeployment.Name).Set(0)
 		}
+		metrics.ReadyReplicas.WithLabelValues(httpBinDeployment.Name).Set(float64(deployment.Status.ReadyReplicas))
 	}
 
 	// Update status if any changes were made
@@ -490,6 +498,9 @@ func (r *HttpBinDeploymentReconciler) finalizeHttpBinDeployment(ctx context.Cont
 	if err := r.LocalClient.Delete(ctx, deployment); err != nil && !errors.IsNotFound(err) {
 		return err
 	}
+	metrics.DeploymentOperations.WithLabelValues("deleted").Inc()
+	metrics.DeploymentReady.DeleteLabelValues(httpBinDeployment.Name)
+	metrics.ReadyReplicas.DeleteLabelValues(httpBinDeployment.Name)
 
 	// Delete Service
 	serviceName := r.getResourceName(httpBinDeployment)

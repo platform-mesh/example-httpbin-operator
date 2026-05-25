@@ -23,6 +23,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	orchestratev1alpha1 "http-operator/api/v1alpha1"
+	"http-operator/internal/metrics"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -81,6 +82,7 @@ func (r *HttpBinReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			"error_type", errors.IsNotFound(err),
 			"error_forbidden", errors.IsForbidden(err),
 			"error_invalid", errors.IsInvalid(err))
+		metrics.HttpBinReconciled.WithLabelValues("error").Inc()
 		return ctrl.Result{}, err
 	}
 
@@ -148,6 +150,7 @@ func (r *HttpBinReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			"HttpBinDeployment.Name", httpBinDeployment.Name,
 			"HttpBinDeployment.Spec", httpBinDeployment.Spec)
 
+		metrics.HttpBinReconciled.WithLabelValues("created").Inc()
 		// Deployment created successfully - return and requeue
 		return ctrl.Result{Requeue: true}, nil
 	} else if err != nil {
@@ -191,6 +194,7 @@ func (r *HttpBinReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
+	metrics.HttpBinReconciled.WithLabelValues("success").Inc()
 	return ctrl.Result{}, nil
 }
 

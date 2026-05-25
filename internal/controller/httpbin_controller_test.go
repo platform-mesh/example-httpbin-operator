@@ -22,12 +22,14 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	orchestratev1alpha1 "http-operator/api/v1alpha1"
+	"http-operator/internal/metrics"
 )
 
 var _ = Describe("HttpBin Controller", func() {
@@ -86,12 +88,18 @@ var _ = Describe("HttpBin Controller", func() {
 				Scheme:       k8sClient.Scheme(),
 			}
 
+			before := testutil.ToFloat64(metrics.HttpBinReconciled.WithLabelValues("created"))
+
 			result, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
 			// Check that reconciliation requests a requeue
 			Expect(result).NotTo(Equal(reconcile.Result{}))
+
+			By("Checking that the created metric was incremented")
+			after := testutil.ToFloat64(metrics.HttpBinReconciled.WithLabelValues("created"))
+			Expect(after - before).To(Equal(float64(1)))
 
 			By("Verifying HttpBinDeployment was created")
 			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{}
@@ -190,10 +198,15 @@ var _ = Describe("HttpBin Controller", func() {
 			Expect(k8sClient.Status().Update(ctx, httpBinDeployment)).To(Succeed())
 
 			By("Reconciling again to propagate status")
+			beforeSuccess := testutil.ToFloat64(metrics.HttpBinReconciled.WithLabelValues("success"))
 			_, err = controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
+
+			By("Checking that the success metric was incremented")
+			afterSuccess := testutil.ToFloat64(metrics.HttpBinReconciled.WithLabelValues("success"))
+			Expect(afterSuccess - beforeSuccess).To(Equal(float64(1)))
 
 			By("Verifying HttpBin status was updated")
 			httpBin := &orchestratev1alpha1.HttpBin{}
