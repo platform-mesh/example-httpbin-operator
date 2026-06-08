@@ -12,7 +12,7 @@ tool (
 )
 
 require (
-	github.com/onsi/ginkgo/v2 v2.27.2
+	github.com/onsi/ginkgo/v2 v2.27.5
 	github.com/onsi/gomega v1.38.3
 	k8s.io/api v0.34.6
 	k8s.io/apimachinery v0.34.6
