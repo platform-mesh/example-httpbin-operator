@@ -2,6 +2,8 @@ package controller
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"net/url"
@@ -42,6 +44,10 @@ const (
 	// selector labels should be in a list and filtered with that.
 	labelHttpbinCr = "httpbin_cr"
 	labelApp       = "app"
+
+	// labelRemoteObjectCluster is set by the api-syncagent on synced objects
+	// and holds the logical cluster (kcp workspace) of the remote object.
+	labelRemoteObjectCluster = "syncagent.kcp.io/remote-object-cluster"
 )
 
 var (
@@ -63,17 +69,34 @@ type HttpBinDeploymentReconciler struct {
 	Scheme       *runtime.Scheme
 }
 
+// getSyncedID returns an identifier that is unique across kcp workspaces for
+// objects synced by the api-syncagent, or "" for objects that were not.
+func getSyncedID(m *orchestratev1alpha1.HttpBinDeployment) string {
+	cluster := m.Labels[labelRemoteObjectCluster]
+	if cluster == "" {
+		return ""
+	}
+	sum := sha256.Sum256([]byte(m.Namespace + "/" + m.Name))
+	return fmt.Sprintf("%s-%s", cluster, hex.EncodeToString(sum[:])[:10])
+}
+
+// getSelectorValue returns the value of the httpbin_cr selector label. Like the
+// resource names it must be unique across kcp workspaces, or the Services of
+// different workspaces select each other's pods.
+func getSelectorValue(m *orchestratev1alpha1.HttpBinDeployment) string {
+	if id := getSyncedID(m); id != "" {
+		return id
+	}
+	return m.Name
+}
+
 func (r *HttpBinDeploymentReconciler) getResourceName(m *orchestratev1alpha1.HttpBinDeployment) string {
-	// api-syncagent labels
-	if m.Labels["syncagent.kcp.io/remote-object-name"] != "" &&
-		m.Labels["syncagent.kcp.io/remote-object-namespace"] != "" {
-		return fmt.Sprintf("httpbin-%s-%s",
-			m.Labels["syncagent.kcp.io/remote-object-name"],
-			m.Labels["syncagent.kcp.io/remote-object-namespace"])
+	if id := getSyncedID(m); id != "" {
+		return "httpbin-" + id
 	}
 
-	// Fallback to using the HttpBinDeployment name if labels are not
-	// set
+	// Fallback to using the HttpBinDeployment name for objects not synced by
+	// the api-syncagent
 	return "httpbin-" + m.Name
 }
 
@@ -83,15 +106,8 @@ func (r *HttpBinDeploymentReconciler) getDNSName(m *orchestratev1alpha1.HttpBinD
 		return *fDomain
 	}
 
-	// api-syncagent labels
-	if m.Labels["syncagent.kcp.io/remote-object-name"] != "" &&
-		m.Labels["syncagent.kcp.io/remote-object-namespace"] != "" &&
-		m.Labels["syncagent.kcp.io/remote-object-cluster"] != "" {
-		return fmt.Sprintf("%s-%s-%s.%s",
-			m.Labels["syncagent.kcp.io/remote-object-name"],
-			m.Labels["syncagent.kcp.io/remote-object-namespace"],
-			m.Labels["syncagent.kcp.io/remote-object-cluster"],
-			*fBaseDomain)
+	if id := getSyncedID(m); id != "" {
+		return fmt.Sprintf("%s.%s", id, *fBaseDomain)
 	}
 
 	// Fallback to using the HttpBinDeployment with base domain
@@ -99,17 +115,11 @@ func (r *HttpBinDeploymentReconciler) getDNSName(m *orchestratev1alpha1.HttpBinD
 }
 
 func (r *HttpBinDeploymentReconciler) getPath(m *orchestratev1alpha1.HttpBinDeployment) string {
-	// api-syncagent labels
-	if m.Labels["syncagent.kcp.io/remote-object-name"] != "" &&
-		m.Labels["syncagent.kcp.io/remote-object-namespace"] != "" &&
-		m.Labels["syncagent.kcp.io/remote-object-cluster"] != "" {
-		return fmt.Sprintf("%s-%s-%s",
-			m.Labels["syncagent.kcp.io/remote-object-name"],
-			m.Labels["syncagent.kcp.io/remote-object-namespace"],
-			m.Labels["syncagent.kcp.io/remote-object-cluster"])
+	if id := getSyncedID(m); id != "" {
+		return id
 	}
 
-	// Fallback to using the HttpBinDeployment with base domain
+	// Fallback to using the HttpBinDeployment name
 	return m.Name
 }
 
@@ -577,7 +587,7 @@ func (r *HttpBinDeploymentReconciler) deploymentForHttpBin(m *orchestratev1alpha
 	// Create minimal, static selector labels - these must never change
 	selectorLabels := map[string]string{
 		labelApp:       "httpbin",
-		labelHttpbinCr: m.Name,
+		labelHttpbinCr: getSelectorValue(m),
 	}
 
 	// Create full set of labels for pod template and metadata
@@ -664,7 +674,7 @@ func (r *HttpBinDeploymentReconciler) serviceForHttpBin(m *orchestratev1alpha1.H
 	// Create minimal, static selector labels - these must never change
 	selectorLabels := map[string]string{
 		labelApp:       "httpbin",
-		labelHttpbinCr: m.Name,
+		labelHttpbinCr: getSelectorValue(m),
 	}
 
 	// Create full set of labels for service metadata
@@ -727,7 +737,7 @@ func (r *HttpBinDeploymentReconciler) serviceForHttpBin(m *orchestratev1alpha1.H
 func (r *HttpBinDeploymentReconciler) httpRouteForHttpBin(m *orchestratev1alpha1.HttpBinDeployment, svc *corev1.Service) *gatewayApi.HTTPRoute {
 	selectorLabels := map[string]string{
 		labelApp:       "httpbin",
-		labelHttpbinCr: m.Name,
+		labelHttpbinCr: getSelectorValue(m),
 	}
 
 	serviceLabels := make(map[string]string)
@@ -811,7 +821,7 @@ func (r *HttpBinDeploymentReconciler) ingressForHttpBin(m *orchestratev1alpha1.H
 	// Create minimal, static selector labels - these must never change
 	selectorLabels := map[string]string{
 		labelApp:       "httpbin",
-		labelHttpbinCr: m.Name,
+		labelHttpbinCr: getSelectorValue(m),
 	}
 
 	// Create full set of labels for service metadata

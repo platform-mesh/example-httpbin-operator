@@ -30,7 +30,7 @@ func setupOperatorTest(ctx context.Context, t *testing.T, cfg *envconf.Config) c
 	// Wait for operator deployment
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      OperatorName,
+			Name:      OperatorName + "-controller-manager",
 			Namespace: OperatorNs,
 		},
 	}

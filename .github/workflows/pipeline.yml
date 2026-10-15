@@ -36,7 +36,7 @@ jobs:
 
   docker-build:
     if: github.event_name == 'pull_request'
-    uses: platform-mesh/.github/.github/workflows/job-docker-build-push.yml@main
+    uses: platform-mesh/.github/.github/workflows/job-docker-build.yml@main
     with:
       imageTagName: ghcr.io/platform-mesh/example-httpbin-operator
     secrets: inherit

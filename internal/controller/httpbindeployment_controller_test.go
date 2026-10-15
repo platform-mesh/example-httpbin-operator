@@ -42,7 +42,11 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 	)
 
 	Context("When reconciling a resource", func() {
-		const resourceName = "test-httpbindeployment"
+		const (
+			resourceName = "test-httpbindeployment"
+			// httpbin-<cluster label>-<sha256("default/test-httpbindeployment")[:10]>
+			localResourceName = "httpbin-cluster1-cea715c1ec"
+		)
 
 		ctx := context.Background()
 
@@ -61,8 +65,7 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 						Name:      resourceName,
 						Namespace: "default",
 						Labels: map[string]string{
-							"syncagent.kcp.io/remote-object-name":      "remote-name",
-							"syncagent.kcp.io/remote-object-namespace": "remote-namespace",
+							"syncagent.kcp.io/remote-object-cluster": "cluster1",
 						},
 					},
 					Spec: orchestratev1alpha1.HttpBinDeploymentSpec{
@@ -94,7 +97,7 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 			// Cleanup local resources
 			deployment := &appsv1.Deployment{}
 			err = k8sClient.Get(ctx, types.NamespacedName{
-				Name:      "httpbin-remote-name-remote-namespace",
+				Name:      localResourceName,
 				Namespace: "default",
 			}, deployment)
 			if err == nil {
@@ -103,7 +106,7 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 
 			service := &corev1.Service{}
 			err = k8sClient.Get(ctx, types.NamespacedName{
-				Name:      "httpbin-remote-name-remote-namespace",
+				Name:      localResourceName,
 				Namespace: "default",
 			}, service)
 			if err == nil {
@@ -128,7 +131,7 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 			deployment := &appsv1.Deployment{}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, types.NamespacedName{
-					Name:      "httpbin-remote-name-remote-namespace",
+					Name:      localResourceName,
 					Namespace: "default",
 				}, deployment)
 			}, timeout, interval).Should(Succeed())
@@ -140,7 +143,7 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 			service := &corev1.Service{}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, types.NamespacedName{
-					Name:      "httpbin-remote-name-remote-namespace",
+					Name:      localResourceName,
 					Namespace: "default",
 				}, service)
 			}, timeout, interval).Should(Succeed())
@@ -627,7 +630,7 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 			deployment := &appsv1.Deployment{}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, types.NamespacedName{
-					Name:      "httpbin-remote-name-remote-namespace",
+					Name:      localResourceName,
 					Namespace: "default",
 				}, deployment)
 			}, timeout, interval).Should(Succeed())
@@ -649,7 +652,7 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 			Eventually(func() int32 {
 				deployment := &appsv1.Deployment{}
 				err := k8sClient.Get(ctx, types.NamespacedName{
-					Name:      "httpbin-remote-name-remote-namespace",
+					Name:      localResourceName,
 					Namespace: "default",
 				}, deployment)
 				if err != nil {
@@ -676,7 +679,7 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 			service := &corev1.Service{}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, types.NamespacedName{
-					Name:      "httpbin-remote-name-remote-namespace",
+					Name:      localResourceName,
 					Namespace: "default",
 				}, service)
 			}, timeout, interval).Should(Succeed())
@@ -698,7 +701,7 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 			Eventually(func() int32 {
 				service := &corev1.Service{}
 				err := k8sClient.Get(ctx, types.NamespacedName{
-					Name:      "httpbin-remote-name-remote-namespace",
+					Name:      localResourceName,
 					Namespace: "default",
 				}, service)
 				if err != nil {
@@ -714,16 +717,58 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 			reconciler := &HttpBinDeploymentReconciler{}
 			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "test",
+					Name:      "test",
+					Namespace: "default",
 					Labels: map[string]string{
-						"syncagent.kcp.io/remote-object-name":      "remote-name",
-						"syncagent.kcp.io/remote-object-namespace": "remote-namespace",
+						"syncagent.kcp.io/remote-object-cluster": "cluster1",
 					},
 				},
 			}
 
 			name := reconciler.getResourceName(httpBinDeployment)
-			Expect(name).To(Equal("httpbin-remote-name-remote-namespace"))
+			Expect(name).To(Equal("httpbin-cluster1-d1a910fb5b"))
+		})
+
+		It("should generate different names for the same object from different workspaces", func() {
+			reconciler := &HttpBinDeploymentReconciler{}
+			fromWorkspace := func(cluster string) *orchestratev1alpha1.HttpBinDeployment {
+				return &orchestratev1alpha1.HttpBinDeployment{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test",
+						Namespace: "default",
+						Labels: map[string]string{
+							"syncagent.kcp.io/remote-object-cluster": cluster,
+						},
+					},
+				}
+			}
+			a, b := fromWorkspace("cluster-a"), fromWorkspace("cluster-b")
+
+			Expect(reconciler.getResourceName(a)).NotTo(Equal(reconciler.getResourceName(b)))
+			Expect(reconciler.getDNSName(a)).NotTo(Equal(reconciler.getDNSName(b)))
+			Expect(reconciler.getPath(a)).NotTo(Equal(reconciler.getPath(b)))
+
+			// The Services must not select each other's pods
+			Expect(reconciler.deploymentForHttpBin(a).Spec.Selector.MatchLabels).
+				NotTo(Equal(reconciler.deploymentForHttpBin(b).Spec.Selector.MatchLabels))
+			Expect(reconciler.serviceForHttpBin(a).Spec.Selector).
+				NotTo(Equal(reconciler.serviceForHttpBin(b).Spec.Selector))
+		})
+
+		It("should keep resource names within the DNS label limit", func() {
+			reconciler := &HttpBinDeploymentReconciler{}
+			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
+				ObjectMeta: metav1.ObjectMeta{
+					// as generated by the api-syncagent's default naming
+					Name:      "2747cabbb481a433679f-817c99006b6845d4c6e3",
+					Namespace: "2czcf3b9d652ahka",
+					Labels: map[string]string{
+						"syncagent.kcp.io/remote-object-cluster": "2czcf3b9d652ahka",
+					},
+				},
+			}
+
+			Expect(len(reconciler.getResourceName(httpBinDeployment))).To(BeNumerically("<=", 63))
 		})
 
 		It("should generate correct resource name without syncagent labels", func() {
@@ -742,17 +787,16 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 			reconciler := &HttpBinDeploymentReconciler{}
 			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "test",
+					Name:      "test",
+					Namespace: "default",
 					Labels: map[string]string{
-						"syncagent.kcp.io/remote-object-name":      "remote-name",
-						"syncagent.kcp.io/remote-object-namespace": "remote-namespace",
-						"syncagent.kcp.io/remote-object-cluster":   "cluster1",
+						"syncagent.kcp.io/remote-object-cluster": "cluster1",
 					},
 				},
 			}
 
 			dnsName := reconciler.getDNSName(httpBinDeployment)
-			Expect(dnsName).To(Equal("remote-name-remote-namespace-cluster1.localhost"))
+			Expect(dnsName).To(Equal("cluster1-d1a910fb5b.localhost"))
 		})
 
 		It("should generate correct DNS name without syncagent labels", func() {
@@ -1567,57 +1611,25 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 		})
 	})
 
-	Context("When testing getDNSName edge cases", func() {
-		It("should use base domain when only name and namespace labels are present", func() {
+	Context("When the syncagent cluster label is missing", func() {
+		It("should fall back to the object name even if other syncagent labels are set", func() {
 			reconciler := &HttpBinDeploymentReconciler{}
 			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "test",
+					Name:      "test",
+					Namespace: "default",
 					Labels: map[string]string{
-						"syncagent.kcp.io/remote-object-name":      "remote-name",
-						"syncagent.kcp.io/remote-object-namespace": "remote-namespace",
+						"syncagent.kcp.io/remote-object-name-hash":      "1f4a305ce37eab891400a362276e120d4ecb3689",
+						"syncagent.kcp.io/remote-object-namespace-hash": "7505d64a54e061b7acd54ccd58b49dc43500b635",
 						// Missing cluster label
 					},
 				},
 			}
 
-			// Should fall back to simple format because cluster label is missing
-			dnsName := reconciler.getDNSName(httpBinDeployment)
-			Expect(dnsName).To(Equal("test.localhost"))
-		})
-	})
-
-	Context("When testing getResourceName with partial labels", func() {
-		It("should use fallback when only name label is present", func() {
-			reconciler := &HttpBinDeploymentReconciler{}
-			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "test-partial",
-					Labels: map[string]string{
-						"syncagent.kcp.io/remote-object-name": "remote-name",
-						// Missing namespace label
-					},
-				},
-			}
-
-			name := reconciler.getResourceName(httpBinDeployment)
-			Expect(name).To(Equal("httpbin-test-partial"))
-		})
-
-		It("should use fallback when only namespace label is present", func() {
-			reconciler := &HttpBinDeploymentReconciler{}
-			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "test-partial-ns",
-					Labels: map[string]string{
-						"syncagent.kcp.io/remote-object-namespace": "remote-namespace",
-						// Missing name label
-					},
-				},
-			}
-
-			name := reconciler.getResourceName(httpBinDeployment)
-			Expect(name).To(Equal("httpbin-test-partial-ns"))
+			// Only the cluster label identifies an object synced from a kcp workspace
+			Expect(reconciler.getResourceName(httpBinDeployment)).To(Equal("httpbin-test"))
+			Expect(reconciler.getDNSName(httpBinDeployment)).To(Equal("test.localhost"))
+			Expect(reconciler.getPath(httpBinDeployment)).To(Equal("test"))
 		})
 	})
 
@@ -1901,36 +1913,6 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 		})
 	})
 
-	Context("When testing getResourceName function", func() {
-		It("should use syncagent labels when available", func() {
-			reconciler := &HttpBinDeploymentReconciler{}
-			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "test",
-					Labels: map[string]string{
-						"syncagent.kcp.io/remote-object-name":      "my-httpbin",
-						"syncagent.kcp.io/remote-object-namespace": "my-namespace",
-					},
-				},
-			}
-
-			resourceName := reconciler.getResourceName(httpBinDeployment)
-			Expect(resourceName).To(Equal("httpbin-my-httpbin-my-namespace"))
-		})
-
-		It("should fallback to name when syncagent labels are missing", func() {
-			reconciler := &HttpBinDeploymentReconciler{}
-			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "simple-httpbin",
-				},
-			}
-
-			resourceName := reconciler.getResourceName(httpBinDeployment)
-			Expect(resourceName).To(Equal("httpbin-simple-httpbin"))
-		})
-	})
-
 	Context("When testing getDNSName function", func() {
 		It("should return DNS name from fDomain when set", func() {
 			// Save original flag value and restore after test
@@ -1955,17 +1937,16 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 			reconciler := &HttpBinDeploymentReconciler{}
 			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "test",
+					Name:      "my-httpbin",
+					Namespace: "my-namespace",
 					Labels: map[string]string{
-						"syncagent.kcp.io/remote-object-name":      "my-httpbin",
-						"syncagent.kcp.io/remote-object-namespace": "my-namespace",
-						"syncagent.kcp.io/remote-object-cluster":   "my-cluster",
+						"syncagent.kcp.io/remote-object-cluster": "my-cluster",
 					},
 				},
 			}
 
 			path := reconciler.getPath(httpBinDeployment)
-			Expect(path).To(Equal("my-httpbin-my-namespace-my-cluster"))
+			Expect(path).To(Equal("my-cluster-92b4bf2a01"))
 		})
 
 		It("should return name as fallback when labels are missing", func() {
