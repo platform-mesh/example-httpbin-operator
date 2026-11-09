@@ -117,6 +117,11 @@ IMG ?= $(REGISTRY)/example-httpbin-operator:$(DOCKER_VERSION)
 docker-build: manifests generate fmt vet ## Build docker image with the manager.
 	$(CONTAINER_TOOL) buildx build -t $(IMG) --load .
 
+# bake exports the multi-arch target, which --load cannot take, so pin the host arch.
+.PHONY: httpbin-build
+httpbin-build: ## Build the httpbin image locally.
+	$(BAKE_TOOL) --load --set httpbin.platform=linux/$(shell $(GO) env GOARCH) httpbin
+
 KIND_CLUSTER ?= kind
 
 docker-install: docker-build

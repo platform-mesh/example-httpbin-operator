@@ -28,3 +28,11 @@ target "example-httpbin-operator" {
   ]
   platforms = PLATFORMS_LIST
 }
+
+target "httpbin" {
+  context = "httpbin"
+  tags = [
+    "${REGISTRY}/example-httpbin-operator/httpbin:${VERSION}",
+  ]
+  platforms = PLATFORMS_LIST
+}
