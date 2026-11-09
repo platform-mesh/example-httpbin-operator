@@ -36,7 +36,9 @@ import (
 )
 
 const (
-	httpbinImage  = "ghcr.io/platform-mesh/custom-images/httpbin:dev"
+	// DefaultHTTPbinImage is the httpbin image deployed when --httpbin-image is unset.
+	DefaultHTTPbinImage = "ghcr.io/platform-mesh/custom-images/httpbin:dev"
+
 	pollInterval  = 60 * time.Second
 	finalizerName = "httpbindeployment.orchestrate.platform-mesh.io/finalizer"
 
@@ -68,6 +70,17 @@ type HttpBinDeploymentReconciler struct {
 	RemoteClient client.Client
 	LocalClient  client.Client
 	Scheme       *runtime.Scheme
+
+	// HttpbinImage lets an operator pin a digest or ship a patched httpbin.
+	HttpbinImage string
+}
+
+// httpbinImage returns the configured image, falling back to the built-in default.
+func (r *HttpBinDeploymentReconciler) httpbinImage() string {
+	if r.HttpbinImage == "" {
+		return DefaultHTTPbinImage
+	}
+	return r.HttpbinImage
 }
 
 // getSyncedID returns an identifier that is unique across kcp workspaces for
@@ -636,7 +649,7 @@ func (r *HttpBinDeploymentReconciler) deploymentForHttpBin(m *orchestratev1alpha
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{
-						Image:           httpbinImage,
+						Image:           r.httpbinImage(),
 						Name:            appName,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Resources: corev1.ResourceRequirements{
