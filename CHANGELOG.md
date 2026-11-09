@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Added
+- `httpbin/` image, migrated from platform-mesh/custom-images, built and pushed
+  as `ghcr.io/platform-mesh/example-httpbin-operator/httpbin` tagged with the
+  operator's version
+- `--httpbin-image` flag to override the httpbin image the operator deploys
+- `make httpbin-build` for local builds of the httpbin image
+
+### Added
 - Multi-cluster support for HttpBin operator
   - Added RemoteClient field to HttpBinReconciler struct
   - Added --remote-kubeconfig flag to specify remote cluster configuration

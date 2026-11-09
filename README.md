@@ -22,7 +22,7 @@ graph TB
         B -->|creates| C[Deployment]
         B -->|creates| D[Service]
         B -->|updates| E[Ingress]
-        C -->|runs| F[kennethreitz/httpbin]
+        C -->|runs| F[custom httpbin image]
         D -->|exposes| F
         E -->|routes| D
         D -->|reports URL, port & IP| B
@@ -102,7 +102,9 @@ The controller automatically configures:
   * Maintains DNS records through Gardener annotations
 - Service status updates with DNS and connectivity information
 
-The deployment uses the `kennethreitz/httpbin:latest` image and configures the following defaults:
+The deployment runs the customised httpbin image built from `httpbin/` in this
+repository (`ghcr.io/platform-mesh/example-httpbin-operator/httpbin`) and
+configures the following defaults:
 - Resource requests: 100m CPU, 128Mi memory
 - Resource limits: 200m CPU, 256Mi memory
 - Container port: 80
@@ -121,6 +123,28 @@ This architecture enables:
 - Efficient resource distribution and isolation
 
 ### Configuration Options
+
+#### Httpbin image
+
+The operator deploys `ghcr.io/platform-mesh/example-httpbin-operator/httpbin`.
+Override it to pin a digest or to point somewhere else:
+
+```sh
+--httpbin-image=ghcr.io/platform-mesh/example-httpbin-operator/httpbin@sha256:<digest>
+```
+
+Development builds override the default the same way. `make httpbin-build` tags
+`ghcr.io/platform-mesh/example-httpbin-operator/httpbin:dev`, so:
+
+```sh
+kind load docker-image ghcr.io/platform-mesh/example-httpbin-operator/httpbin:dev --name <cluster>
+helm upgrade --install example-httpbin-operator oci://ghcr.io/platform-mesh/helm-charts/example-httpbin-operator \
+    --set 'operator.args={--httpbin-image=ghcr.io/platform-mesh/example-httpbin-operator/httpbin:dev}'
+```
+
+The image adds on top of upstream httpbin: serving under a subpath via
+`HTTPBIN_PREFIX`, and the `/files/<name>` store endpoints — see
+[`httpbin/README.md`](httpbin/README.md).
 
 #### Kubeconfig for Remote Cluster
 
@@ -159,6 +183,9 @@ make docker-build IMG=<some-registry>/example-httpbin-operator:tag
 
 # Push the operator container image
 make docker-push IMG=<some-registry>/example-httpbin-operator:tag
+
+# Build the httpbin container image locally
+make httpbin-build
 ```
 
 #### Code Quality and Verification

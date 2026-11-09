@@ -137,7 +137,7 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 			}, timeout, interval).Should(Succeed())
 
 			Expect(*deployment.Spec.Replicas).To(Equal(int32(1)))
-			Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(Equal(httpbinImage))
+			Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(Equal(DefaultHTTPbinImage))
 
 			By("Verifying Service was created")
 			service := &corev1.Service{}
@@ -1268,7 +1268,20 @@ var _ = Describe("HttpBinDeployment Controller", func() {
 			Expect(deployment.Name).To(Equal("httpbin-test-deployment"))
 			Expect(deployment.Namespace).To(Equal("default"))
 			Expect(*deployment.Spec.Replicas).To(Equal(int32(1)))
-			Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(Equal(httpbinImage))
+			Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(Equal(DefaultHTTPbinImage))
+		})
+
+		It("should create deployment with an overridden image", func() {
+			reconciler := &HttpBinDeploymentReconciler{HttpbinImage: "registry.example.com/pinned-httpbin@sha256:0000000000000000000000000000000000000000000000000000000000000000"}
+			httpBinDeployment := &orchestratev1alpha1.HttpBinDeployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-deployment",
+					Namespace: "default",
+				},
+			}
+
+			deployment := reconciler.deploymentForHttpBin(httpBinDeployment)
+			Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(Equal(reconciler.HttpbinImage))
 		})
 
 		It("should create deployment with custom replicas", func() {

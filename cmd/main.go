@@ -69,6 +69,8 @@ func main() {
 	// required for remote cluster
 	var remoteKubeconfig string
 
+	var httpbinImage string
+
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
@@ -82,6 +84,8 @@ func main() {
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
 
 	flag.StringVar(&remoteKubeconfig, "remote-kubeconfig", "", "Path to the kubeconfig file for the remote cluster.")
+
+	flag.StringVar(&httpbinImage, "httpbin-image", controller.DefaultHTTPbinImage, "Image to deploy for httpbin instances")
 
 	opts := zap.Options{
 		Development: true,
@@ -187,6 +191,7 @@ func main() {
 		RemoteClient: rmMgr.GetClient(), // For watching resources in remote cluster
 		LocalClient:  localClient,       // For creating resources in local cluster
 		Scheme:       scheme,
+		HttpbinImage: httpbinImage,
 	}).SetupWithManager(rmMgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "HttpBinDeployment")
 		os.Exit(1)
