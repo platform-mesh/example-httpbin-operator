@@ -14,4 +14,4 @@ permissions:
 jobs:
   auto-labeler:
     if: github.event.pull_request.head.repo.full_name == github.repository
-    uses: platform-mesh/.github/.github/workflows/job-auto-labeler.yml@aba361134b3e69b66b83183c90f5fc568a7805c4 # main
+    uses: platform-mesh/.github/.github/workflows/job-auto-labeler.yml@75f04cd6d0bd1cc9fc5b7917e6a4a0829d66b93b # main
