@@ -66,34 +66,6 @@ jobs:
           cache-from: type=gha,scope=httpbin
           cache-to: type=gha,mode=max,scope=httpbin
 
-  quality-gate:
-    if: always()
-    permissions: {}
-    needs: [lint, test, docker-build, httpbin-build]
-    runs-on: ubuntu-latest
-    timeout-minutes: 1
-    steps:
-      - name: Check results
-        run: |
-          if [[ "${{ needs.lint.result }}" != "success" ]]; then
-            echo "lint failed"
-            exit 1
-          fi
-          if [[ "${{ needs.test.result }}" != "success" ]]; then
-            echo "test failed"
-            exit 1
-          fi
-          # docker-build is skipped on main pushes — allow skipped
-          if [[ "${{ needs.docker-build.result }}" != "success" && "${{ needs.docker-build.result }}" != "skipped" ]]; then
-            echo "docker-build failed"
-            exit 1
-          fi
-          # httpbin-build is skipped on main pushes — allow skipped
-          if [[ "${{ needs.httpbin-build.result }}" != "success" && "${{ needs.httpbin-build.result }}" != "skipped" ]]; then
-            echo "httpbin-build failed"
-            exit 1
-          fi
-
   create-version:
     if: github.ref == 'refs/heads/main'
     uses: platform-mesh/.github/.github/workflows/job-create-version.yml@75f04cd6d0bd1cc9fc5b7917e6a4a0829d66b93b # main
