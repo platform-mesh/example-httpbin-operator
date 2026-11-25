@@ -1,0 +1,5 @@
+* @platform-mesh/go-maintainers
+
+# ownerless so bots can auto-merge updates
+go.mod
+go.sum
